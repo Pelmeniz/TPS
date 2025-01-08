@@ -1,0 +1,12 @@
+{
+  "hlsl.preprocessorDefinitions": {
+  },
+  " hlsl.additionalIncludeDirectories": [
+    "C:\\Github\\TPS",
+    ".",
+    "..\\RelativeDirectory"
+  ],
+  "hlsl.virtualDirectoryMappings": {
+    "/Project": "C:\\Github\\TPS\\Shaders"
+  }
+}

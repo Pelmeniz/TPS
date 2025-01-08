@@ -9,6 +9,8 @@
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Materials/Material.h"
+#include "Kismet\GameplayStatics.h"
+#include "Kismet\KismetMathLibrary.h"
 #include "Engine/World.h"
 
 ATPSCharacter::ATPSCharacter()
@@ -48,4 +50,67 @@ ATPSCharacter::ATPSCharacter()
 void ATPSCharacter::Tick(float DeltaSeconds)
 {
     Super::Tick(DeltaSeconds);
+
+	MovementTick(DeltaSeconds);
+}
+
+void ATPSCharacter::SetupPlayerInputComponent(UInputComponent* NewInputComponent)
+{
+	Super::SetupPlayerInputComponent(NewInputComponent);
+	
+	NewInputComponent->BindAxis(TEXT("MoveForward"), this, &ATPSCharacter::InputAxisX);
+	NewInputComponent->BindAxis(TEXT("MoveRight"), this, &ATPSCharacter::InputAxisY);
+}
+
+void ATPSCharacter::InputAxisX(float Value)
+{
+	AxisX = Value;
+}
+
+void ATPSCharacter::InputAxisY(float Value)
+{
+	AxisY = Value;
+}
+
+void ATPSCharacter::MovementTick(float DeltaTime)
+{
+	AddMovementInput(FVector(1.0f, 0.0f, 0.0f), AxisX);
+	AddMovementInput(FVector(0.0f, 1.0f, 0.0f), AxisY);
+
+	APlayerController* MyController = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+	if (MyController)
+	{
+		FHitResult ResultHit;
+		MyController->GetHitResultUnderCursorByChannel(ETraceTypeQuery::TraceTypeQuery6, false, ResultHit);
+		
+		float FindRotatorResultYaw = UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), ResultHit.Location).Yaw;
+		SetActorRotation(FQuat(FRotator(0.0f, FindRotatorResultYaw, 0.0f)));
+	}
+}
+
+void ATPSCharacter::CharacterUpdate()
+{
+	float ResSpeed = 600.0f;
+	switch (MovementState)
+	{
+	case EMovementState::Aim_State:
+		ResSpeed = MovementInfo.AimSpeed;
+		break;
+	case EMovementState::Walk_State:
+		ResSpeed = MovementInfo.WalkSpeed;
+		break;
+	case EMovementState::Run_State:
+		ResSpeed = MovementInfo.RunSpeed;
+		break;
+	default:
+		break;
+	}
+
+	GetCharacterMovement()->MaxWalkSpeed = ResSpeed;
+}
+
+void ATPSCharacter::ChangeMovementeState(EMovementState NewMovementState)
+{
+	MovementState = NewMovementState;
+	CharacterUpdate();
 }
