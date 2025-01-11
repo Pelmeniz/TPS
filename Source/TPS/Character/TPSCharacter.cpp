@@ -94,13 +94,19 @@ void ATPSCharacter::CharacterUpdate()
 	switch (MovementState)
 	{
 	case EMovementState::Aim_State:
-		ResSpeed = MovementInfo.AimSpeed;
+		ResSpeed = MovementSpeedInfo.AimSpeedNormal;
+		break;
+	case EMovementState::AimWalk_State:
+		ResSpeed = MovementSpeedInfo.AimSpeedWalk;
 		break;
 	case EMovementState::Walk_State:
-		ResSpeed = MovementInfo.WalkSpeed;
+		ResSpeed = MovementSpeedInfo.WalkSpeedNormal;
 		break;
 	case EMovementState::Run_State:
-		ResSpeed = MovementInfo.RunSpeed;
+		ResSpeed = MovementSpeedInfo.RunSpeedNormal;
+		break;
+	case EMovementState::SprintRun_State:
+		ResSpeed = MovementSpeedInfo.SprintRunSpeedRun;
 		break;
 	default:
 		break;
@@ -111,6 +117,53 @@ void ATPSCharacter::CharacterUpdate()
 
 void ATPSCharacter::ChangeMovementeState(EMovementState NewMovementState)
 {
-	MovementState = NewMovementState;
+	// Ничего не нажато
+	if (!bWalkEnabled && !bSprintRunEnabled && !bAimEnabled)
+	{
+		MovementState = EMovementState::Run_State;
+	}
+	else
+	{
+		// Нажат спринт
+		if (bSprintRunEnabled)
+		{
+			bWalkEnabled = false;
+			bAimEnabled = false;
+			MovementState = EMovementState::SprintRun_State;
+		}
+		// Прицелились и ходим
+		if (bWalkEnabled && !bSprintRunEnabled && bAimEnabled)
+		{
+			MovementState = EMovementState::AimWalk_State;
+		}
+		else
+		{
+			// Только хотьба
+			if (bWalkEnabled && !bSprintRunEnabled && !bAimEnabled)
+			{
+				MovementState = EMovementState::Walk_State;
+			}
+			else
+			{
+				//Только прицеливание
+				if (!bWalkEnabled && !bSprintRunEnabled && bAimEnabled)
+				{
+					MovementState = EMovementState::Aim_State;
+				}
+			}
+		}
+	}
 	CharacterUpdate();
 }
+
+/*
+void ATPSCharacter::InputMouseWheel(float DeltaTime)
+{
+	// Зум колесика мыши. Код не работает Разобраться!!!
+	if ((Height - (HeightMouse * SpeedZoom) > MinHeightZoom - 1) && (Height - (HeightMouse * SpeedZoom) < MaxHeightZoom + 1))
+	{
+		Height = Height - (HeightMouse * SpeedZoom);
+		CameraBoom->TargetArmLength = UKismetMathLibrary::FInterpTo(CameraBoom->TargetArmLength, Height, DeltaTime, 1);
+	}
+}
+*/

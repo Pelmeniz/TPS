@@ -40,7 +40,14 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	EMovementState MovementState = EMovementState::Run_State;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
-	FCharacterSpeed MovementInfo;
+	FCharacterSpeed MovementSpeedInfo;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	bool bSprintRunEnabled = false;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	bool bWalkEnabled = false;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	bool bAimEnabled = false;
 
 	UFUNCTION()
 	void InputAxisX(float Value);
@@ -49,6 +56,15 @@ public:
 
 	float AxisX = 0.0f;
 	float AxisY = 0.0f;
+	
+	/*
+	* //Переменные для InputMouseWheel
+	double Height = 1200.0f;
+	double HeightMouse = 40.0f;
+	double SpeedZoom = 1.0f;
+	double MinHeightZoom = 50.0f;
+	double MaxHeightZoom = 1200.0f;
+	*/
 
 	// Tick Function
 	UFUNCTION()
@@ -58,5 +74,11 @@ public:
 	void CharacterUpdate();
 	UFUNCTION(BlueprintCallable)
 	void ChangeMovementeState(EMovementState NewMovementState);
+	
+	/*
+	* // Зум колесика мыши. Код не работает Разобраться!!!
+	UFUNCTION(BlueprintCallable)
+	void InputMouseWheel(float DeltaTime);
+	*/
 };
 
