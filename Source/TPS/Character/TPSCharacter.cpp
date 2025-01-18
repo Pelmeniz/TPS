@@ -77,6 +77,13 @@ void ATPSCharacter::MovementTick(float DeltaTime)
 	AddMovementInput(FVector(1.0f, 0.0f, 0.0f), AxisX);
 	AddMovementInput(FVector(0.0f, 1.0f, 0.0f), AxisY);
 
+	if (MovementState == EMovementState::SprintRun_State)
+	{
+		FVector MyRotationVector = FVector(AxisX, AxisY, 0.0f);
+		FRotator MyRotator = MyRotationVector.ToOrientationRotator();
+		SetActorRotation(FQuat(MyRotator));
+	}
+
 	APlayerController* MyController = UGameplayStatics::GetPlayerController(GetWorld(), 0);
 	if (MyController)
 	{
@@ -154,6 +161,14 @@ void ATPSCharacter::ChangeMovementeState(EMovementState NewMovementState)
 		}
 	}
 	CharacterUpdate();
+}
+
+bool ATPSCharacter::IsForwardMove()
+{
+	FVector FnVector = GetActorForwardVector();
+	FVector FlVector = GetLastMovementInputVector();
+
+	return FVector::DotProduct(FnVector, FlVector) > 0.9f;
 }
 
 /*

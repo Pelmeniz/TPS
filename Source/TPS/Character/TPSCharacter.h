@@ -80,5 +80,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void InputMouseWheel(float DeltaTime);
 	*/
+	UFUNCTION(BlueprintCallable)
+	bool IsForwardMove();
 };
 
