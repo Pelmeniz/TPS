@@ -29,6 +29,11 @@ ATPSCharacter::ATPSCharacter()
 	GetCharacterMovement()->bConstrainToPlane = true;
 	GetCharacterMovement()->bSnapToPlaneAtStart = true;
 
+	CameraDistance = 800;
+	MinCameraDistance = CameraDistance - 500;
+	MaxCameraDistance = CameraDistance + 500;
+	CameraSlideSpeed = 50;
+
 	// Create a camera boom...
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	CameraBoom->SetupAttachment(RootComponent);
@@ -60,6 +65,8 @@ void ATPSCharacter::SetupPlayerInputComponent(UInputComponent* NewInputComponent
 	
 	NewInputComponent->BindAxis(TEXT("MoveForward"), this, &ATPSCharacter::InputAxisX);
 	NewInputComponent->BindAxis(TEXT("MoveRight"), this, &ATPSCharacter::InputAxisY);
+	NewInputComponent->BindAxis(TEXT("MouseWheel"), this, &ATPSCharacter::InputMouseWheel);
+
 }
 
 void ATPSCharacter::InputAxisX(float Value)
@@ -76,6 +83,7 @@ void ATPSCharacter::MovementTick(float DeltaTime)
 {
 	AddMovementInput(FVector(1.0f, 0.0f, 0.0f), AxisX);
 	AddMovementInput(FVector(0.0f, 1.0f, 0.0f), AxisY);
+	CameraSlideTick(DeltaTime);
 
 	if (MovementState == EMovementState::SprintRun_State)
 	{
@@ -171,14 +179,21 @@ bool ATPSCharacter::IsForwardMove()
 	return FVector::DotProduct(FnVector, FlVector) > 0.9f;
 }
 
-/*
-void ATPSCharacter::InputMouseWheel(float DeltaTime)
+
+void ATPSCharacter::CameraSlideTick(float DeltaTime)
 {
-	// Зум колесика мыши. Код не работает Разобраться!!!
-	if ((Height - (HeightMouse * SpeedZoom) > MinHeightZoom - 1) && (Height - (HeightMouse * SpeedZoom) < MaxHeightZoom + 1))
-	{
-		Height = Height - (HeightMouse * SpeedZoom);
-		CameraBoom->TargetArmLength = UKismetMathLibrary::FInterpTo(CameraBoom->TargetArmLength, Height, DeltaTime, 1);
-	}
+	// Зум колесика мыши. 
+	if (CameraBoom == nullptr) return; // Если по какой-то причине отсутствует указатель на ArmLengthComponent  -- скипаем логику
+	if (CameraDistance == CameraBoom->TargetArmLength) return; // Если желаемая высота не изменилась -- скипаем логику
+	CameraDistance = FMath::Clamp(CameraDistance, MinCameraDistance, MaxCameraDistance);
+
+	CameraBoom->TargetArmLength = FMath::FInterpTo(CameraBoom->TargetArmLength, CameraDistance, DeltaTime, 5.0f);
+	
 }
-*/
+
+void ATPSCharacter::InputMouseWheel(float Value)
+{
+	if (Value != 0.0f) CameraDistance -= Value * CameraSlideSpeed;
+
+}
+

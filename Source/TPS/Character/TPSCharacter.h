@@ -37,6 +37,19 @@ private:
 	class USpringArmComponent* CameraBoom;
 
 public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
+	float CameraDistance; // Расстояние от камеры до персонажа
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
+	float MinCameraDistance; // Минимальное расстояние камеры
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
+	float MaxCameraDistance; // Ммаксимальное расстояние камеры
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
+	float CameraSlideSpeed; // Минимальное расстояние камеры
+
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	EMovementState MovementState = EMovementState::Run_State;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
@@ -56,15 +69,6 @@ public:
 
 	float AxisX = 0.0f;
 	float AxisY = 0.0f;
-	
-	/*
-	* //Переменные для InputMouseWheel
-	double Height = 1200.0f;
-	double HeightMouse = 40.0f;
-	double SpeedZoom = 1.0f;
-	double MinHeightZoom = 50.0f;
-	double MaxHeightZoom = 1200.0f;
-	*/
 
 	// Tick Function
 	UFUNCTION()
@@ -75,11 +79,14 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void ChangeMovementeState(EMovementState NewMovementState);
 	
-	/*
-	* // Зум колесика мыши. Код не работает Разобраться!!!
+	
+	// Зум колесика мыши. 
 	UFUNCTION(BlueprintCallable)
-	void InputMouseWheel(float DeltaTime);
-	*/
+	void CameraSlideTick(float DeltaTime);
+
+	UFUNCTION(BlueprintCallable)
+	void InputMouseWheel(float Value);
+	
 	UFUNCTION(BlueprintCallable)
 	bool IsForwardMove();
 };
