@@ -7,7 +7,7 @@
 #include "Engine/EngineTypes.h"
 #include "TPS\FuncLibrary\Type.h"
 #include "Engine/World.h"
-//#include "TPS/Weapons/WeaponsDefault.h"
+#include "TPS/Weapon/WeaponDefault.h"
 #include "TPSCharacter.generated.h"
 
 
@@ -83,14 +83,14 @@ public:
 	bool bWalkEnabled = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	bool bAimEnabled = false;
-	/*
+	
 	//Weapon
 	AWeaponDefault* CurrentWaepon = nullptr;
 
 	//For Demo
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Demo")
 	TSubclassOf<AWeaponDefault> InitWeaponClass = nullptr;
-	*/
+	
 	UDecalComponent* CurrentCursor = nullptr;
 
 	// Inputs
@@ -98,12 +98,12 @@ public:
 	void InputAxisX(float Value);
 	UFUNCTION()
 	void InputAxisY(float Value);
-	/*
+	
 	UFUNCTION()
 	void InputsAttackPressed();
 	UFUNCTION()
 	void InputsAttackReleased();
-	*/
+	
 
 	float AxisX = 0.0f;
 	float AxisY = 0.0f;
@@ -127,11 +127,11 @@ public:
 	
 	UFUNCTION(BlueprintCallable)
 	bool IsForwardMove();
-	/*
+	
 	UFUNCTION(BlueprintCallable)
 	AWeaponDefault* GetCurrentWeapon();
 	void InitWeapon();
-	*/
+	
 
 	UFUNCTION(BlueprintCallable)
 	UDecalComponent* GetCursorToWorld();

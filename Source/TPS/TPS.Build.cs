@@ -8,7 +8,7 @@ public class TPS : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
-        PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "NavigationSystem", "AIModule", "Niagara", "EnhancedInput" });
+        PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "UMG", "HeadMountedDisplay", "NavigationSystem", "AIModule", "Niagara", "PhysicsCore", "EnhancedInput" });
 
 		PublicIncludePaths.AddRange(new string[]
 		{
@@ -16,8 +16,8 @@ public class TPS : ModuleRules
 			"TPS/Character",
 			"TPS/FuncLibrary",
 			"TPS/Game",
-            "TPS/Weapons",
-            "TPS/Weapons/Projectiles"
+			"TPS/Weapon",
+			"TPS/Weapon/Projectiles"
             });
     }
 }

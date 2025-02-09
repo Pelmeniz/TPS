@@ -80,7 +80,7 @@ void ATPSCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	//InitWeapon();
+	InitWeapon();
 
 	if (CursorMaterial)
 	{
@@ -98,10 +98,10 @@ void ATPSCharacter::SetupPlayerInputComponent(UInputComponent* NewInputComponent
 	NewInputComponent->BindAxis(TEXT("MoveForward"), this, &ATPSCharacter::InputAxisX);
 	NewInputComponent->BindAxis(TEXT("MoveRight"), this, &ATPSCharacter::InputAxisY);
 	NewInputComponent->BindAxis(TEXT("MouseWheel"), this, &ATPSCharacter::InputMouseWheel);
-	/*
+	
 	NewInputComponent->BindAction(TEXT("FireEvent"), EInputEvent::IE_Pressed, this, &ATPSCharacter::InputsAttackPressed);
 	NewInputComponent->BindAction(TEXT("FireEvent"), EInputEvent::IE_Released, this, &ATPSCharacter::InputsAttackReleased);
-	*/
+	
 }
 
 void ATPSCharacter::InputAxisX(float Value)
@@ -113,7 +113,7 @@ void ATPSCharacter::InputAxisY(float Value)
 {
 	AxisY = Value;
 }
-/*
+
 void ATPSCharacter::InputsAttackPressed()
 {
 	AttackCharEvent(true);
@@ -123,7 +123,7 @@ void ATPSCharacter::InputsAttackReleased()
 {
 	AttackCharEvent(false);
 }
-*/
+
 void ATPSCharacter::MovementTick(float DeltaTime)
 {
 	AddMovementInput(FVector(1.0f, 0.0f, 0.0f), AxisX);
@@ -148,8 +148,8 @@ void ATPSCharacter::MovementTick(float DeltaTime)
 		SetActorRotation(FQuat(FRotator(0.0f, FindRotatorResultYaw, 0.0f)));
 	}
 }
-/*
-void ATPSCharacter::AttackCharEvent(bIsFiring)
+
+void ATPSCharacter::AttackCharEvent(bool bIsFiring)
 {
 	AWeaponDefault* MyWeapon = nullptr;
 	MyWeapon = GetCurrentWeapon();
@@ -161,7 +161,7 @@ void ATPSCharacter::AttackCharEvent(bIsFiring)
 	else
 		UE_LOG(LogTemp, Warning, TEXT("ATPSCharacter::AttackCharEvent - CurrentWeapon -NULL"));
 }
-*/
+
 void ATPSCharacter::CharacterUpdate()
 {
 	float ResSpeed = 600.0f;
@@ -228,7 +228,7 @@ void ATPSCharacter::ChangeMovementeState(EMovementState NewMovementState)
 		}
 	}
 	CharacterUpdate();
-	/*
+	
 	//Weapon state update
 	AWeaponDefault* MyWeapon = GetCurrentWeapon();
 	if (MyWeapon)
@@ -236,7 +236,36 @@ void ATPSCharacter::ChangeMovementeState(EMovementState NewMovementState)
 		MyWeapon->UpdateStateWeapon(MovementState);
 	}
 
-	*/
+	
+}
+
+AWeaponDefault* ATPSCharacter::GetCurrentWeapon()
+{
+	return CurrentWeapon;
+}
+
+void ATPSCharacter::InitWeapon() //ToDo Init by row  by table
+{
+	if (InitWeaponClass)
+	{
+		FVector SpawnLocation = FVector(0);
+		FRotator SpawnRotation = FRotator(0);
+
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+		SpawnParams.Owner = GetOwner();
+		SpawnParams.Instigator = GetInstigator();
+
+		AWeaponDefault* MyWeapon = Cast<AWeaponDefault>(GetWorld()->SpawnActor(InitWeaponClass, &SpawnLocation, &SpawnRotation, SpawnParams));
+		if (MyWeapon)
+		{
+			FAttachmentTransformRules Rule(EAttachmentRule::SnapToTarget, false);
+			MyWeapon->AttachToComponent(GetMesh(), Rule, FName("WeaponSocketRightHand"));
+			CurrentWeapon = MyWeapon;
+
+			MyWeapon->UpdateStateWeapon(MovementState);
+		}
+	}
 }
 
 
