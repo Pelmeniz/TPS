@@ -4,23 +4,37 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "Engine/EngineTypes.h"
 #include "TPS\FuncLibrary\Type.h"
+#include "Engine/World.h"
+//#include "TPS/Weapons/WeaponsDefault.h"
 #include "TPSCharacter.generated.h"
 
 
+USTRUCT(BlueprintType)
+struct FCharacterSpeedInfo
+{
+	GENERATED_BODY()
+};
 
 UCLASS(Blueprintable)
 class ATPSCharacter : public ACharacter
 {
 	GENERATED_BODY()
+protected:
+	virtual void BeginPlay() override;
 
 public:
 	ATPSCharacter();
 
+
 	// Called every frame.
 	virtual void Tick(float DeltaSeconds) override;
 
+	
+
 	virtual void SetupPlayerInputComponent(class UInputComponent* NewInputComponent) override;
+
 
 	/** Returns TopDownCameraComponent subobject **/
 	FORCEINLINE class UCameraComponent* GetTopDownCameraComponent() const { return TopDownCameraComponent; }
@@ -37,6 +51,14 @@ private:
 	class USpringArmComponent* CameraBoom;
 
 public:
+	//Cursor
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cursor")
+	UMaterialInterface* CursorMaterial = nullptr;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cursor")
+	FVector CursorSize = FVector(20.0f, 40.0f, 40.0f);
+
+
+	//Movement
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
 	float CameraDistance; // Расстояние от камеры до персонажа
 
@@ -61,11 +83,27 @@ public:
 	bool bWalkEnabled = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	bool bAimEnabled = false;
+	/*
+	//Weapon
+	AWeaponDefault* CurrentWaepon = nullptr;
 
+	//For Demo
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Demo")
+	TSubclassOf<AWeaponDefault> InitWeaponClass = nullptr;
+	*/
+	UDecalComponent* CurrentCursor = nullptr;
+
+	// Inputs
 	UFUNCTION()
 	void InputAxisX(float Value);
 	UFUNCTION()
 	void InputAxisY(float Value);
+	/*
+	UFUNCTION()
+	void InputsAttackPressed();
+	UFUNCTION()
+	void InputsAttackReleased();
+	*/
 
 	float AxisX = 0.0f;
 	float AxisY = 0.0f;
@@ -89,5 +127,13 @@ public:
 	
 	UFUNCTION(BlueprintCallable)
 	bool IsForwardMove();
+	/*
+	UFUNCTION(BlueprintCallable)
+	AWeaponDefault* GetCurrentWeapon();
+	void InitWeapon();
+	*/
+
+	UFUNCTION(BlueprintCallable)
+	UDecalComponent* GetCursorToWorld();
 };
 
