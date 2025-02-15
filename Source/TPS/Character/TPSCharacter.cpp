@@ -8,7 +8,6 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/SpringArmComponent.h"
-//#include "HeadMoutedDisplayFunctionLibrary.h"
 #include "Materials/Material.h"
 #include "Kismet\GameplayStatics.h"
 #include "Kismet\KismetMathLibrary.h"
@@ -51,44 +50,13 @@ ATPSCharacter::ATPSCharacter()
 	// Activate ticking in order to update the cursor every frame.
 	PrimaryActorTick.bCanEverTick = true;
 	PrimaryActorTick.bStartWithTickEnabled = true;
-	
 }
 
 void ATPSCharacter::Tick(float DeltaSeconds)
 {
     Super::Tick(DeltaSeconds);
 
-	if (CurrentCursor)
-	{
-		APlayerController* MyPc = Cast<APlayerController>(GetController());
-		if (MyPc)
-		{
-			FHitResult TraceHitResult;
-			MyPc->GetHitResultUnderCursor(ECC_Visibility, true, TraceHitResult);
-			FVector CursorFv = TraceHitResult.ImpactNormal;
-			FRotator CursorR = CursorFv.Rotation();
-
-			CurrentCursor->SetWorldLocation(TraceHitResult.Location);
-			CurrentCursor->SetWorldRotation(CursorR);
-		}
-	}
-
 	MovementTick(DeltaSeconds);
-}
-
-void ATPSCharacter::BeginPlay()
-{
-	Super::BeginPlay();
-
-	InitWeapon();
-
-	if (CursorMaterial)
-	{
-		{
-			CurrentCursor = UGameplayStatics::SpawnDecalAtLocation(GetWorld(), CursorMaterial, CursorSize, FVector(0));
-		}
-	}
-
 }
 
 void ATPSCharacter::SetupPlayerInputComponent(UInputComponent* NewInputComponent)
@@ -98,10 +66,7 @@ void ATPSCharacter::SetupPlayerInputComponent(UInputComponent* NewInputComponent
 	NewInputComponent->BindAxis(TEXT("MoveForward"), this, &ATPSCharacter::InputAxisX);
 	NewInputComponent->BindAxis(TEXT("MoveRight"), this, &ATPSCharacter::InputAxisY);
 	NewInputComponent->BindAxis(TEXT("MouseWheel"), this, &ATPSCharacter::InputMouseWheel);
-	
-	NewInputComponent->BindAction(TEXT("FireEvent"), EInputEvent::IE_Pressed, this, &ATPSCharacter::InputsAttackPressed);
-	NewInputComponent->BindAction(TEXT("FireEvent"), EInputEvent::IE_Released, this, &ATPSCharacter::InputsAttackReleased);
-	
+
 }
 
 void ATPSCharacter::InputAxisX(float Value)
@@ -112,16 +77,6 @@ void ATPSCharacter::InputAxisX(float Value)
 void ATPSCharacter::InputAxisY(float Value)
 {
 	AxisY = Value;
-}
-
-void ATPSCharacter::InputsAttackPressed()
-{
-	AttackCharEvent(true);
-}
-
-void ATPSCharacter::InputsAttackReleased()
-{
-	AttackCharEvent(false);
 }
 
 void ATPSCharacter::MovementTick(float DeltaTime)
@@ -142,24 +97,10 @@ void ATPSCharacter::MovementTick(float DeltaTime)
 	{
 		FHitResult ResultHit;
 		MyController->GetHitResultUnderCursorByChannel(ETraceTypeQuery::TraceTypeQuery6, false, ResultHit);
-		//MyController->GetHitResultUnderCursor(ECC_GameTraceChannel1, false, ResultHit);
 		
 		float FindRotatorResultYaw = UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), ResultHit.Location).Yaw;
 		SetActorRotation(FQuat(FRotator(0.0f, FindRotatorResultYaw, 0.0f)));
 	}
-}
-
-void ATPSCharacter::AttackCharEvent(bool bIsFiring)
-{
-	AWeaponDefault* MyWeapon = nullptr;
-	MyWeapon = GetCurrentWeapon();
-	if (MyWeapon)
-	{
-		//ToDo Check melee or range
-		MyWeapon->SetWeaponSteteFire(bIsFiring);
-	}
-	else
-		UE_LOG(LogTemp, Warning, TEXT("ATPSCharacter::AttackCharEvent - CurrentWeapon -NULL"));
 }
 
 void ATPSCharacter::CharacterUpdate()
@@ -228,46 +169,7 @@ void ATPSCharacter::ChangeMovementeState(EMovementState NewMovementState)
 		}
 	}
 	CharacterUpdate();
-	
-	//Weapon state update
-	AWeaponDefault* MyWeapon = GetCurrentWeapon();
-	if (MyWeapon)
-	{
-		MyWeapon->UpdateStateWeapon(MovementState);
-	}
-
-	
 }
-
-AWeaponDefault* ATPSCharacter::GetCurrentWeapon()
-{
-	return CurrentWeapon;
-}
-
-void ATPSCharacter::InitWeapon() //ToDo Init by row  by table
-{
-	if (InitWeaponClass)
-	{
-		FVector SpawnLocation = FVector(0);
-		FRotator SpawnRotation = FRotator(0);
-
-		FActorSpawnParameters SpawnParams;
-		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-		SpawnParams.Owner = GetOwner();
-		SpawnParams.Instigator = GetInstigator();
-
-		AWeaponDefault* MyWeapon = Cast<AWeaponDefault>(GetWorld()->SpawnActor(InitWeaponClass, &SpawnLocation, &SpawnRotation, SpawnParams));
-		if (MyWeapon)
-		{
-			FAttachmentTransformRules Rule(EAttachmentRule::SnapToTarget, false);
-			MyWeapon->AttachToComponent(GetMesh(), Rule, FName("WeaponSocketRightHand"));
-			CurrentWeapon = MyWeapon;
-
-			MyWeapon->UpdateStateWeapon(MovementState);
-		}
-	}
-}
-
 
 bool ATPSCharacter::IsForwardMove()
 {
@@ -275,11 +177,6 @@ bool ATPSCharacter::IsForwardMove()
 	FVector FlVector = GetLastMovementInputVector();
 
 	return FVector::DotProduct(FnVector, FlVector) > 0.9f;
-}
-
-UDecalComponent* ATPSCharacter::GetCursorToWorld()
-{
-	return CurrentCursor;
 }
 
 
