@@ -5,7 +5,7 @@ AProjectileDefault::AProjectileDefault()
 {
 	// Set this actor to call Tick() every frame. You can turn this of to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-
+	/*
 	BulletCollisionSphere = CreateDefaultSubobject<USphereComponent>(TEXT("Collision Sphere"));
 
 	BulletCollisionSphere->SetSphereRadius(16.0f);
@@ -19,6 +19,8 @@ AProjectileDefault::AProjectileDefault()
 	BulletCollisionSphere->SetCanEverAffectNavigation(false); //collision not affect navigation (P keyboard on editor)
 
 	RootComponent = BulletCollisionSphere;
+
+	*/
 
 	BulletMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Bullet Projectile Mesh"));
 	BulletMesh->SetupAttachment(RootComponent);
@@ -51,10 +53,13 @@ void AProjectileDefault::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 }
 
+/*
 void AProjectileDefault::BulletCollisionSphereHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormaleImpulse, const FHitResult& Hit)
 {
 
 }
+
+*/
 
 void AProjectileDefault::BulletCollisionSphereBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {

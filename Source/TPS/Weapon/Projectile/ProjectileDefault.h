@@ -7,6 +7,7 @@
 #include "GameFramework/ProjectileMovementComponent.h"
 
 #include "FuncLibrary/Type.h"
+//#include "Weapon/Projectile/ProjectileDefault.h"
 #include "ProjectileDefault.generated.h"
 
 UCLASS()
@@ -20,8 +21,8 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"), Category = Components)
 	class UStaticMeshComponent* BulletMesh = nullptr;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"), Category = Components)
-	class USphereComponent* BulletCollisionSphere = nullptr;
+	//UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"), Category = Components)
+	//class USphereComponent* BulletCollisionSphere = nullptr;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"), Category = Components)
 	class UProjectileMovementComponent* BulletProjectileMovement = nullptr;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"), Category = Components)

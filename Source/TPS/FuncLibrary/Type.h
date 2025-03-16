@@ -32,6 +32,20 @@ struct FCharacterSpeed
 		float SprintRunSpeedRun = 800.0f;
 };
 
+USTRUCT(BlueprintType)
+struct FWeaponInfo
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WeaponSetting")
+	float WeaponDamage = 20.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WeaponSetting")
+	float RateOfFire = 0.5f;
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WeaponSetting")
+	//FProjectileInfo ProjectileSetting;
+
+};
+
 UCLASS()
 class TPS_API UType : public UBlueprintFunctionLibrary
 {

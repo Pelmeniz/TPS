@@ -253,7 +253,7 @@ void ATPSCharacter::InitWeapon()
 		if (MyWeapon)
 		{
 			FAttachmentTransformRules Rule(EAttachmentRule::SnapToTarget, false);
-			MyWeapon->AttachToComponent(GetMesh(), Rule, FName("WeaponSocketRightHand"));
+			MyWeapon->AttachToComponent(GetMesh(), Rule, FName("Weapon_R"));
 			CurrentWeapon = MyWeapon;
 
 			MyWeapon->UpdateStateWeapon(MovementState);
