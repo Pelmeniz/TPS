@@ -21,14 +21,14 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"), Category = Components)
 	class UStaticMeshComponent* BulletMesh = nullptr;
-	//UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"), Category = Components)
-	//class USphereComponent* BulletCollisionSphere = nullptr;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"), Category = Components)
+	class USphereComponent* BulletCollisionSphere = nullptr;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"), Category = Components)
 	class UProjectileMovementComponent* BulletProjectileMovement = nullptr;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"), Category = Components)
 	class UParticleSystemComponent* BulletFX = nullptr;
 
-	//FProjectileInfo ProjectileSetting;
+	FProjectileInfo ProjectileSetting;
 
 protected:
 	// Called when the game starts or when spawned

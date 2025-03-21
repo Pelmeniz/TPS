@@ -33,6 +33,18 @@ struct FCharacterSpeed
 };
 
 USTRUCT(BlueprintType)
+struct FProjectileInfo
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ProjecctileSetting")
+	TSubclassOf<class AProjectileDefault> Projectile = nullptr;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ProjecctileSetting")
+	float ProjectileDamage = 20.0f;
+
+};
+
+USTRUCT(BlueprintType)
 struct FWeaponInfo
 {
 	GENERATED_BODY()
@@ -41,8 +53,8 @@ struct FWeaponInfo
 	float WeaponDamage = 20.0f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WeaponSetting")
 	float RateOfFire = 0.5f;
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WeaponSetting")
-	//FProjectileInfo ProjectileSetting;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WeaponSetting")
+	FProjectileInfo ProjectileSetting;
 
 };
 

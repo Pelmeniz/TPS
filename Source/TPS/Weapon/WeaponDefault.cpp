@@ -74,14 +74,14 @@ bool AWeaponDefault::CheckWeaponCanFire()
 	return true;
 }
 
-/*
-FProjejectileInfo AWeaponDefault::GetProjectile()
+
+FProjectileInfo AWeaponDefault::GetProjectile()
 {
 	return WeaponSetting.ProjectileSetting;
 }
-*/
 
-/*
+
+
 void AWeaponDefault::Fire()
 {
 	if (ShootLocation)
@@ -114,7 +114,7 @@ void AWeaponDefault::Fire()
 		}
 	}
 }
-*/
+
 
 void AWeaponDefault::UpdateStateWeapon(EMovementState NewMovementState)
 {

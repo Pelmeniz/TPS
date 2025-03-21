@@ -52,9 +52,9 @@ public:
 
 	bool CheckWeaponCanFire();
 
-	//FProjectileInfo GetProjectile();
+	FProjectileInfo GetProjectile();
 
-	//void Fire();
+	void Fire();
 
 	void UpdateStateWeapon(EMovementState NewMovementState);
 	void ChangeDispersion();
