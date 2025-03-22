@@ -8,7 +8,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/SpringArmComponent.h"
-//#include "HeadMountedDisplayFunctionLibrary.h"
+#include "HeadMountedDisplayTypes.h"
 #include "Materials/Material.h"
 #include "Kismet\GameplayStatics.h"
 #include "Kismet\KismetMathLibrary.h"
@@ -17,7 +17,7 @@
 ATPSCharacter::ATPSCharacter()
 {
 	// Set size for player capsule
-	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
+	GetCapsuleComponent()->InitCapsuleSize(42.0f, 96.0f);
 
 	// Don't rotate character to camera direction
 	bUseControllerRotationPitch = false;
@@ -26,7 +26,7 @@ ATPSCharacter::ATPSCharacter()
 
 	// Configure character movement
 	GetCharacterMovement()->bOrientRotationToMovement = true; // Rotate character to moving direction
-	GetCharacterMovement()->RotationRate = FRotator(0.f, 640.f, 0.f);
+	GetCharacterMovement()->RotationRate = FRotator(0.0f, 640.0f, 0.0f);
 	GetCharacterMovement()->bConstrainToPlane = true;
 	GetCharacterMovement()->bSnapToPlaneAtStart = true;
 
@@ -39,8 +39,8 @@ ATPSCharacter::ATPSCharacter()
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	CameraBoom->SetupAttachment(RootComponent);
 	CameraBoom->SetUsingAbsoluteRotation(true); // Don't want arm to rotate when character does
-	CameraBoom->TargetArmLength = 800.f;
-	CameraBoom->SetRelativeRotation(FRotator(-60.f, 0.f, 0.f));
+	CameraBoom->TargetArmLength = 800.0f;
+	CameraBoom->SetRelativeRotation(FRotator(-60.0f, 0.0f, 0.0f));
 	CameraBoom->bDoCollisionTest = false; // Don't want to pull camera in when it collides with level
 
 	// Create a camera...
@@ -79,7 +79,7 @@ void ATPSCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	InitWeapon();
+	InitWeapon(InitWeaponName);
 
 	if (CursorMaterial)
 	{
@@ -97,6 +97,7 @@ void ATPSCharacter::SetupPlayerInputComponent(UInputComponent* NewInputComponent
 
 	NewInputComponent->BindAction(TEXT("FireEvent"), EInputEvent::IE_Pressed, this, &ATPSCharacter::InputAttackPressed);
 	NewInputComponent->BindAction(TEXT("FireEvent"), EInputEvent::IE_Released, this, &ATPSCharacter::InputAttackReleased);
+	NewInputComponent->BindAction(TEXT("ReloadEvent"), EInputEvent::IE_Released, this, &ATPSCharacter::TryReloadWeapon);
 
 }
 
@@ -132,16 +133,53 @@ void ATPSCharacter::MovementTick(float DeltaTime)
 		FRotator MyRotator = MyRotationVector.ToOrientationRotator();
 		SetActorRotation(FQuat(MyRotator));
 	}
-
-	APlayerController* MyController = UGameplayStatics::GetPlayerController(GetWorld(), 0);
-	if (MyController)
+	else
 	{
-		FHitResult ResultHit;
-		MyController->GetHitResultUnderCursorByChannel(ETraceTypeQuery::TraceTypeQuery6, false, ResultHit);
-		
-		float FindRotatorResultYaw = UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), ResultHit.Location).Yaw;
-		SetActorRotation(FQuat(FRotator(0.0f, FindRotatorResultYaw, 0.0f)));
+		APlayerController* MyController = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+		if (MyController)
+		{
+			FHitResult ResultHit;
+			//MyController->GetHitResultUnderCursorByChannel(ETraceTypeQuery::TraceTypeQuery6, false, ResultHit);
+			MyController->GetHitResultUnderCursor(ECC_GameTraceChannel1, true, ResultHit);
+
+			float FindRotatorResultYaw = UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), ResultHit.Location).Yaw;
+			SetActorRotation(FQuat(FRotator(0.0f, FindRotatorResultYaw, 0.0f)));
+
+			if (CurrentWeapon)
+			{
+				FVector Displacement = FVector(0);
+				switch (MovementState)
+				{
+				case EMovementState::Aim_State:
+					Displacement = FVector(0.0f, 0.0f, 160.0f);
+					CurrentWeapon->ShouldReduseDespersion = true;
+					break;
+				case EMovementState::AimWalk_State:
+					Displacement = FVector(0.0f, 0.0f, 160.0f);
+					CurrentWeapon->ShouldReduseDespersion = true;
+					break;
+				case EMovementState::Walk_State:
+					Displacement = FVector(0.0f, 0.0f, 120.0f);
+					CurrentWeapon->ShouldReduseDespersion = false;
+					break;
+				case EMovementState::Run_State:
+					Displacement = FVector(0.0f, 0.0f, 120.0f);
+					CurrentWeapon->ShouldReduseDespersion = false;
+					break;
+				case EMovementState::SprintRun_State:
+					break;
+				default:
+					break;
+				}
+
+				//aim cursor like 3d widget?
+				CurrentWeapon->ShootEndLocation = ResultHit.Location + Displacement;
+			}
+		}
 	}
+
+	
+	
 }
 
 void ATPSCharacter::AttackCharEvent(bool bIsFiring)
@@ -184,7 +222,7 @@ void ATPSCharacter::CharacterUpdate()
 	GetCharacterMovement()->MaxWalkSpeed = ResSpeed;
 }
 
-void ATPSCharacter::ChangeMovementeState(EMovementState NewMovementState)
+void ATPSCharacter::ChangeMovementeState()
 {
 	// Ничего не нажато
 	if (!bWalkEnabled && !bSprintRunEnabled && !bAimEnabled)
@@ -237,28 +275,75 @@ AWeaponDefault* ATPSCharacter::GetCurrentWeapon()
 	return CurrentWeapon;
 }
 
-void ATPSCharacter::InitWeapon()
+void ATPSCharacter::InitWeapon(FName IdWeaponName)
 {
-	if (InitWeaponClass)
+	UTPSGameInstance* MyGI = Cast<UTPSGameInstance>(GetGameInstance());
+	FWeaponInfo MyWeaponInfo;
+	if (MyGI)
 	{
-		FVector SpawnLocation = FVector(0);
-		FRotator SpawnRotation = FRotator(0);
-
-		FActorSpawnParameters SpawnParams;
-		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-		SpawnParams.Owner = GetOwner();
-		SpawnParams.Instigator = GetInstigator();
-
-		AWeaponDefault* MyWeapon = Cast<AWeaponDefault>(GetWorld()->SpawnActor(InitWeaponClass, &SpawnLocation, &SpawnRotation, SpawnParams));
-		if (MyWeapon)
+		if (MyGI->GetWeaponInfoByName(IdWeaponName, MyWeaponInfo))
 		{
-			FAttachmentTransformRules Rule(EAttachmentRule::SnapToTarget, false);
-			MyWeapon->AttachToComponent(GetMesh(), Rule, FName("Weapon_R"));
-			CurrentWeapon = MyWeapon;
+			FVector SpawnLocation = FVector(0);
+			FRotator SpawnRotation = FRotator(0);
 
-			MyWeapon->UpdateStateWeapon(MovementState);
+			FActorSpawnParameters SpawnParams;
+			SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+			SpawnParams.Owner = GetOwner();
+			SpawnParams.Instigator = GetInstigator();
+
+			AWeaponDefault* MyWeapon = Cast<AWeaponDefault>(GetWorld()->SpawnActor(MyWeaponInfo.WeaponClass, &SpawnLocation, &SpawnRotation, SpawnParams));
+			if (MyWeapon)
+			{
+				FAttachmentTransformRules Rule(EAttachmentRule::SnapToTarget, false);
+				MyWeapon->AttachToComponent(GetMesh(), Rule, FName("Weapon_R"));
+				CurrentWeapon = MyWeapon;
+
+				MyWeapon->WeaponSetting = MyWeaponInfo;
+				MyWeapon->WeaponInfo.Round = MyWeaponInfo.MaxRound;
+				//Remove !! Debug
+				MyWeapon->ReloadTime = MyWeaponInfo.ReloadTime;
+				MyWeapon->UpdateStateWeapon(MovementState);
+
+				MyWeapon->OnWeaponReloadStart.AddDynamic(this, &ATPSCharacter::WeaponReloadStart);
+				MyWeapon->OnWeaponReloadEnd.AddDynamic(this, &ATPSCharacter::WeaponReloadEnd);
+			}
 		}
 	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("ATPSChatacter::InitWeapon - Weapon not found on table -NULL"));
+	}
+}
+
+void ATPSCharacter::TryReloadWeapon()
+{
+	if (CurrentWeapon)
+	{
+		if (CurrentWeapon->GetWeaponRound() <= CurrentWeapon->WeaponSetting.MaxRound)
+		{
+			CurrentWeapon->InitReload();
+		}
+	}
+}
+
+void ATPSCharacter::WeaponReloadStart(UAnimMontage* Anim)
+{
+	WeaponReloadStart_BP(Anim);
+}
+
+void ATPSCharacter::WeaponReloadEnd()
+{
+	WeaponReloadEnd_BP();
+}
+
+void ATPSCharacter::WeaponReloadStart_BP_Implementation(UAnimMontage* Anim)
+{
+	//in BP
+}
+
+void ATPSCharacter::WeaponReloadEnd_BP_Implementation()
+{
+	//in BP
 }
 
 UDecalComponent* ATPSCharacter::GetCursorToWorld()
