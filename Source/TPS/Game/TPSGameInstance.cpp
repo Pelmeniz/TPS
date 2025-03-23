@@ -1,13 +1,13 @@
 #include "TPS/Game/TPSGameInstance.h"
 
-bool UPTSGameInstance::GetWeaponInfoByName(FName NameWeapon, FWeaponInfo& OutInfo)
+bool UTPSGameInstance::GetWeaponInfoByName(FName NameWeapon, FWeaponInfo& OutInfo)
 {
 	bool bIsFind = false;
 	FWeaponInfo* WeaponInfoRow;
 
-	if (WeapoInfoTable)
+	if (WeaponDataTable)
 	{
-		WeaponInfoRow = WeaponInfoTable->FindRow<FWeaponInfo>(NameWeapon, "", false);
+		WeaponInfoRow = WeaponDataTable->FindRow<FWeaponInfo>(NameWeapon, "", false);
 		if (WeaponInfoRow)
 		{
 			bIsFind = true;

@@ -10,6 +10,11 @@ AWeaponDefault::AWeaponDefault()
 	PrimaryActorTick.bCanEverTick = true;
 
 	SceneComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Scene"));
+	if (!SceneComponent)																								/*Проверка на наличие компонента*/
+	{
+		UE_LOG(LogTemp, Error, TEXT("Failed to create SceneComponent!"));
+		return;
+	}
 	RootComponent = SceneComponent;
 
 	SkeletalMeshWeapon = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Skeletal Mesh"));
@@ -42,7 +47,7 @@ void AWeaponDefault::Tick(float DeltaTime)
 	DispersionTick(DeltaTime);
 }
 
-void AWeaponDefault::FireTick(float Deltatime)
+void AWeaponDefault::FireTick(float DeltaTime)
 {
 	
 	if (GetWeaponRound() > 0)
@@ -69,7 +74,12 @@ void AWeaponDefault::FireTick(float Deltatime)
 			}
 
 		}
-	}	
+	}
+	if (GetWeaponRound() <= 0)											// Проверка на случай, если GetWeaponRound() вернет 0 или меньше. Для исключения неправильного поведения оружия.
+	{
+		InitReload();
+		return;
+	}
 }
 
 void AWeaponDefault::ReloadTick(float DeltaTime)
@@ -114,10 +124,12 @@ void AWeaponDefault::DispersionTick(float DeltaTime)
 			}
 		}
 	}
+	#if WITH_EDITORONLY_DATA
 	if (ShowDebug)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Dispersion: MAX = %f. MIN = %f. Current = %f"), CurrentDispersionMax, CurrentDispersionMin, CurrentDispersion);
 	}
+	#endif
 }
 
 void AWeaponDefault::WeaponInit()
@@ -268,21 +280,28 @@ float AWeaponDefault::GetCurrentDispersion() const
 	return Result;
 }
 
-FVector AWeaponDefault::ApplyDispersionToShoot(FVector DispersionShoot) const
+FVector AWeaponDefault::ApplyDispersionToShoot(FVector DirectionShoot) const
 {
 	return FMath::VRandCone(DirectionShoot, GetCurrentDispersion() * PI / 180.0f);
 }
 
 FVector AWeaponDefault::GetFireEndLocation() const
 {
+	if (!ShootLocation)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("AWeaponDefault::GetFireEndLocation - ShootLocation is null!"));
+		return FVector::ZeroVector; // Возвращаем нулевой вектор в случае ошибки
+	}
+
 	bool bShootDirection = false;
 	FVector EndLocation = FVector(0.0f);
+	static const float MaxFireDistance = 20000.0f;  // Замена числового выражения в вычислениях.
 
 	FVector TmpV = (ShootLocation->GetComponentLocation() - ShootEndLocation);
 
 	if (TmpV.Size() > SizeVectorToChangeShootDirectionLogic)
 	{
-		EndLocation = ShootLocation->GetComponentLocation() + ApplyDispersionToShoot((ShootLocation->GetComponentLocation() - ShootEndLocation).GetSafeNormal()) * -20000.0f;
+		EndLocation = ShootLocation->GetComponentLocation() + ApplyDispersionToShoot((ShootLocation->GetComponentLocation() - ShootEndLocation).GetSafeNormal()) * -MaxFireDistance;
 		if (ShowDebug)
 		{
 			DrawDebugCone(GetWorld(), ShootLocation->GetComponentLocation(), -(ShootLocation->GetComponentLocation() - ShootEndLocation), 
@@ -291,13 +310,14 @@ FVector AWeaponDefault::GetFireEndLocation() const
 		}
 		else
 		{
-			EndLocation = ShootLocation->GetComponentLocation() + ApplyDispersionToShoot(ShootLocation->GetForwardVector()) * 20000.0f;
+			EndLocation = ShootLocation->GetComponentLocation() + ApplyDispersionToShoot(ShootLocation->GetForwardVector()) * MaxFireDistance;
 			if (ShowDebug)
 			{
 				DrawDebugCone(GetWorld(), ShootLocation->GetComponentLocation(), ShootLocation->GetForwardVector(), WeaponSetting.DistanceTrace, GetCurrentDispersion() * PI / 180.0f,
 					GetCurrentDispersion() * PI / 180.0f, 32, FColor::Emerald, false, 0.1f, (uint8)'\000', 1.0f);
 			}
 		}
+#if WITH_EDITORONLY_DATA
 		if (ShowDebug)
 		{
 			//direction weapon look
@@ -309,8 +329,10 @@ FVector AWeaponDefault::GetFireEndLocation() const
 
 			//DrawDebugSphere(GetWorld(), ShootLocation->GetComponentLocation() + ShootLocation->GetForwardVector()*SizeVectorToChangeShootDirectionLogic, 10.f, 8, FColor::Red, false, 4.0f);
 		}
-		return EndLocation;
+#endif
+		
 	}
+	return EndLocation;
 }
 
 int8 AWeaponDefault::GetNumberProjectileByShot() const
@@ -332,7 +354,11 @@ void AWeaponDefault::InitReload()
 	//ToDo Anim reload
 	if (WeaponSetting.AnimCharReload)
 	{
-		OnWeaponReloadStart.Broadcast(WeaponSetting.AnimCharReload);
+		//OnWeaponReloadStart.Broadcast(WeaponSetting.AnimCharReload);
+		if (OnWeaponReloadStart.IsBound())
+		{
+			OnWeaponReloadStart.Broadcast(WeaponSetting.AnimCharReload);                    // Проверка на наличие слушателей
+		}
 	}
 }
 

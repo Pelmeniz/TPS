@@ -12,6 +12,7 @@
 #include "Materials/Material.h"
 #include "Kismet\GameplayStatics.h"
 #include "Kismet\KismetMathLibrary.h"
+#include "TPS/Game/TPSGameInstance.h"
 #include "Engine/World.h"
 
 ATPSCharacter::ATPSCharacter()
@@ -64,11 +65,13 @@ void ATPSCharacter::Tick(float DeltaSeconds)
 		{
 			FHitResult TraceHitResult;
 			MyPc->GetHitResultUnderCursor(ECC_Visibility, true, TraceHitResult);
+			
 			FVector CursorFv = TraceHitResult.ImpactNormal;
 			FRotator CursorR = CursorFv.Rotation();
 
 			CurrentCursor->SetWorldLocation(TraceHitResult.Location);
 			CurrentCursor->SetWorldRotation(CursorR);
+			
 		}
 	}
 
@@ -130,8 +133,13 @@ void ATPSCharacter::MovementTick(float DeltaTime)
 	if (MovementState == EMovementState::SprintRun_State)
 	{
 		FVector MyRotationVector = FVector(AxisX, AxisY, 0.0f);
-		FRotator MyRotator = MyRotationVector.ToOrientationRotator();
-		SetActorRotation(FQuat(MyRotator));
+		if (!MyRotationVector.IsNearlyZero())							// проверкa на нулевой вектор
+		{
+			FRotator MyRotator = MyRotationVector.ToOrientationRotator();
+			SetActorRotation(FQuat(MyRotator));
+		}
+		//FRotator MyRotator = MyRotationVector.ToOrientationRotator();
+		//SetActorRotation(FQuat(MyRotator));
 	}
 	else
 	{
@@ -139,8 +147,8 @@ void ATPSCharacter::MovementTick(float DeltaTime)
 		if (MyController)
 		{
 			FHitResult ResultHit;
-			//MyController->GetHitResultUnderCursorByChannel(ETraceTypeQuery::TraceTypeQuery6, false, ResultHit);
-			MyController->GetHitResultUnderCursor(ECC_GameTraceChannel1, true, ResultHit);
+			MyController->GetHitResultUnderCursorByChannel(ETraceTypeQuery::TraceTypeQuery6, false, ResultHit);
+			//MyController->GetHitResultUnderCursor(ECC_GameTraceChannel1, true, ResultHit);
 
 			float FindRotatorResultYaw = UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), ResultHit.Location).Yaw;
 			SetActorRotation(FQuat(FRotator(0.0f, FindRotatorResultYaw, 0.0f)));
@@ -184,6 +192,7 @@ void ATPSCharacter::MovementTick(float DeltaTime)
 
 void ATPSCharacter::AttackCharEvent(bool bIsFiring)
 {
+	
 	AWeaponDefault* MyWeapon = nullptr;
 	MyWeapon = GetCurrentWeapon();
 	if (MyWeapon)
@@ -193,6 +202,7 @@ void ATPSCharacter::AttackCharEvent(bool bIsFiring)
 	}
 	else
 		UE_LOG(LogTemp, Warning, TEXT("ATPSCharacter::AttackCharEvent - CurrentWeapon -NULL"));
+
 }
 
 void ATPSCharacter::CharacterUpdate()
@@ -222,8 +232,9 @@ void ATPSCharacter::CharacterUpdate()
 	GetCharacterMovement()->MaxWalkSpeed = ResSpeed;
 }
 
-void ATPSCharacter::ChangeMovementeState()
+void ATPSCharacter::ChangeMovementState()
 {
+	
 	// Ничего не нажато
 	if (!bWalkEnabled && !bSprintRunEnabled && !bAimEnabled)
 	{
@@ -317,13 +328,11 @@ void ATPSCharacter::InitWeapon(FName IdWeaponName)
 
 void ATPSCharacter::TryReloadWeapon()
 {
-	if (CurrentWeapon)
-	{
-		if (CurrentWeapon->GetWeaponRound() <= CurrentWeapon->WeaponSetting.MaxRound)
+		if (CurrentWeapon && CurrentWeapon->GetWeaponRound() <= CurrentWeapon->WeaponSetting.MaxRound)    // Упрощенный выриант проверок.
 		{
 			CurrentWeapon->InitReload();
 		}
-	}
+	
 }
 
 void ATPSCharacter::WeaponReloadStart(UAnimMontage* Anim)

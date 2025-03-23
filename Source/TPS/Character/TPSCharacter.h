@@ -27,6 +27,7 @@ protected:
 
 public:
 	ATPSCharacter();
+	//virtual ~ATPSCharacter() override;    // Виртуальный деструктор
 
 	// Called every frame.
 	virtual void Tick(float DeltaSeconds) override;
@@ -41,11 +42,11 @@ public:
 
 private:
 	/** Top down camera */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = true))
 	class UCameraComponent* TopDownCameraComponent;
 
 	/** Camera boom positioning the camera above the character */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = true))
 	class USpringArmComponent* CameraBoom;
 
 	/** A decal that projects to the cursor location. */
@@ -119,7 +120,7 @@ public:
 	void CharacterUpdate();
 	UFUNCTION(BlueprintCallable)
 	//void ChangeMovementeState(EMovementState NewMovementState);
-	void ChangeMovementeState();
+	void ChangeMovementState();
 
 	UFUNCTION(BlueprintCallable)
 	AWeaponDefault* GetCurrentWeapon();

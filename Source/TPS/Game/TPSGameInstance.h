@@ -15,7 +15,7 @@ class TPS_API UTPSGameInstance : public UGameInstance
 public:
 	
 	//table
-	UPROPERTY()
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = " WeaponSetting ")
 	UDataTable* WeaponDataTable = nullptr;
 	UFUNCTION(BlueprintCallable)
 	bool GetWeaponInfoByName(FName NameWeapon, FWeaponInfo& OutInfo);

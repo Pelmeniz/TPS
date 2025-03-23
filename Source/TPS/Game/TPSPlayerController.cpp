@@ -4,6 +4,7 @@
 #include "GameFramework/Pawn.h"
 #include "Blueprint/AIBlueprintHelperLibrary.h"
 #include "Runtime/Engine/Classes/Components/DecalComponent.h"
+#include "HeadMountedDisplayFunctionLibrary.h"
 #include "HeadMountedDisplayTypes.h"
 #include "NiagaraSystem.h"
 #include "NiagaraFunctionLibrary.h"
@@ -74,6 +75,7 @@ void ATPSPlayerController::SetupInputComponent()
 
 void ATPSPlayerController::MoveToMouseCursor()
 {
+	/*
 	if (UHeadMountedDisplayFunctionLibrary::IsHeadMountedDisplayEnabled())
 	{
 		if (ATPSCharacter* MyPawn = Cast<ATPSCharacter>(GetPawn()))
@@ -85,7 +87,7 @@ void ATPSPlayerController::MoveToMouseCursor()
 		}
 	}
 	else
-	{
+	{ */
 		// Trace to see what is under the mouse cursor
 		FHitResult Hit;
 		GetHitResultUnderCursor(ECC_Visibility, false, Hit);
@@ -95,7 +97,8 @@ void ATPSPlayerController::MoveToMouseCursor()
 			// We hit something, move there
 			SetNewMoveDestination(Hit.ImpactPoint);
 		}
-	}
+	
+	
 }
 
 void ATPSPlayerController::MoveToTouchLocation(const ETouchIndex::Type FingerIndex, const FVector Location)
@@ -136,7 +139,11 @@ void ATPSPlayerController::OnInputStarted()
 void ATPSPlayerController::OnSetDestinationTriggered()
 {
 	// We flag that the input is being pressed
-	FollowTime += GetWorld()->GetDeltaSeconds();
+	//FollowTime += GetWorld()->GetDeltaSeconds();
+	if (GetWorld())
+	{
+		FollowTime += GetWorld()->GetDeltaSeconds();
+	}
 	
 	// We look for the location in the world where the player has pressed the input
 	FHitResult Hit;
@@ -168,7 +175,7 @@ void ATPSPlayerController::OnSetDestinationTriggered()
 void ATPSPlayerController::OnSetDestinationReleased()
 {
 	// If it was a short press
-	if (FollowTime <= ShortPressThreshold)
+	if (FollowTime <= ShortPressThreshold && !CachedDestination.IsNearlyZero())   //Добавлена проверка на правильное перемещение персонажа
 	{
 		// We move there and spawn some particles
 		UAIBlueprintHelperLibrary::SimpleMoveToLocation(this, CachedDestination);

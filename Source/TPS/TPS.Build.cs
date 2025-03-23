@@ -8,7 +8,7 @@ public class TPS : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
-        PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "NavigationSystem", "AIModule", "Niagara", "EnhancedInput", "HeadMountedDisplay", "PhysicsCore", "Slate" });
+        PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "NavigationSystem", "AIModule", "Niagara", "EnhancedInput", "HeadMountedDisplay", "PhysicsCore", "Slate", "XRBase" });
 
 		PublicIncludePaths.AddRange(new string[]
 		{
