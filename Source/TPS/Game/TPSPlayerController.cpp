@@ -4,7 +4,7 @@
 #include "GameFramework/Pawn.h"
 #include "Blueprint/AIBlueprintHelperLibrary.h"
 #include "Runtime/Engine/Classes/Components/DecalComponent.h"
-#include "HeadMountedDisplayFunctionLibrary.h"
+//#include "HeadMountedDisplayFunctionLibrary.h"
 #include "HeadMountedDisplayTypes.h"
 #include "NiagaraSystem.h"
 #include "NiagaraFunctionLibrary.h"
