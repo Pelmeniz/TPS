@@ -116,7 +116,7 @@ struct FWeaponDispersion
 };
 
 USTRUCT(BlueprintType)
-struct FWeaponInfo //: FTableRowBase
+struct FWeaponInfo : public FTableRowBase
 {
 	GENERATED_BODY()
 
