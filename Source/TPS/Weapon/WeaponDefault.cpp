@@ -54,7 +54,7 @@ void AWeaponDefault::FireTick(float DeltaTime)
 	{
 		if (WeaponFiring)
 		{
-			if (FireTimer < 0.0f)
+			if (FireTimer <= 0.0f)
 			{
 				if (!WeaponReloading)
 				{
@@ -74,11 +74,6 @@ void AWeaponDefault::FireTick(float DeltaTime)
 			}
 
 		}
-	}
-	if (GetWeaponRound() <= 0)											// Проверка на случай, если GetWeaponRound() вернет 0 или меньше. Для исключения неправильного поведения оружия.
-	{
-		InitReload();
-		return;
 	}
 }
 

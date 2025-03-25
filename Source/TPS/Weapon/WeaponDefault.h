@@ -20,7 +20,6 @@ class TPS_API AWeaponDefault : public AActor
 public:
 	//Sets default values for this actor's properties
 	AWeaponDefault();
-	//virtual ~AWeaponDefault() override;  //Виртуальный деструктор для исправления утечки данных.
 
 	FOnWeaponReloadEnd OnWeaponReloadEnd;
 	FOnWeaponReloadStart OnWeaponReloadStart;
@@ -34,7 +33,6 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"), Category = Components)
 	class UArrowComponent* ShootLocation = nullptr;
 
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "FireLogic")
 	UPROPERTY()
 	FWeaponInfo WeaponSetting;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Info")

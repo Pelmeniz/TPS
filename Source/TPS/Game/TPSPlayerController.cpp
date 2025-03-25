@@ -58,7 +58,7 @@ void ATPSPlayerController::SetupInputComponent()
 		// Setup mouse input events
 		EnhancedInputComponent->BindAction(SetDestinationClickAction, ETriggerEvent::Started, this, &ATPSPlayerController::OnInputStarted);
 		EnhancedInputComponent->BindAction(SetDestinationClickAction, ETriggerEvent::Triggered, this, &ATPSPlayerController::OnSetDestinationTriggered);
-		EnhancedInputComponent->BindAction(SetDestinationClickAction, ETriggerEvent::Completed, this, &ATPSPlayerController::OnSetDestinationReleased);
+		//EnhancedInputComponent->BindAction(SetDestinationClickAction, ETriggerEvent::Completed, this, &ATPSPlayerController::set);
 		EnhancedInputComponent->BindAction(SetDestinationClickAction, ETriggerEvent::Canceled, this, &ATPSPlayerController::OnSetDestinationReleased);
 
 		// Setup touch input events
@@ -182,7 +182,7 @@ void ATPSPlayerController::OnSetDestinationReleased()
 		UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, FXCursor, CachedDestination, FRotator::ZeroRotator, FVector(1.f, 1.f, 1.f), true, true, ENCPoolMethod::None, true);
 	}
 
-	FollowTime = 0.f;
+	FollowTime = 0.0f;
 }
 
 // Triggered every frame when the input is held down

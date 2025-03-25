@@ -16,11 +16,6 @@ AProjectileDefault::AProjectileDefault()
 
 	BulletCollisionSphere->SetCanEverAffectNavigation(false); // collision not affect navigation (P keyboard on editor)
 
-
-	//BulletCollisionSphere->OnComponentHit.AddDynamic(this, &AProjectileDefault::BulletCollisionSphereHit);
-	//BulletCollisionSphere->OnComponentBeginOverlap.AddDynamic(this, &AProjectileDefault::BulletCollisionSphereBeginOverlap);
-	//BulletCollisionSphere->OnComponentEndOverlap.AddDynamic(this, &AProjectileDefault::BulletCollisionSphereEndOverlap);
-
 	RootComponent = BulletCollisionSphere;
 
 	
@@ -31,9 +26,6 @@ AProjectileDefault::AProjectileDefault()
 
 	BulletFX = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("Bullet FX"));
 	BulletFX->SetupAttachment(RootComponent);
-
-	//BulletSound = CreateDefaultSubobject<UAudioComponent>(TEXT("Bullet Audio"));
-	//BulletSound->SetupAttachment(RootComponent);
 
 	BulletProjectileMovement = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("Bullet ProjectileMovement"));
 	BulletProjectileMovement->UpdatedComponent = RootComponent;
@@ -99,10 +91,6 @@ void AProjectileDefault::BulletCollisionSphereHit(UPrimitiveComponent* HitComp, 
 	}
 	UGameplayStatics::ApplyDamage(OtherActor, ProjectileSetting.ProjectileDamage, GetInstigatorController(), this, NULL);
 	ImpactProjectile();
-	//UGameplayStatics::ApplyRadialDamageWithFalloff()
-	//Apply damage cast to if char like bp? //OnAnyTakeDmage delegate
-	//UGameplayStatics::ApplyDamage(OtherActor, ProjectileSetting.ProjectileDamage, GetOwner()->GetInstigatorController(), GetOwner(), NULL);
-	//or custom damage by health component
 }
 
 
