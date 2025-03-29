@@ -10,11 +10,6 @@ AWeaponDefault::AWeaponDefault()
 	PrimaryActorTick.bCanEverTick = true;
 
 	SceneComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Scene"));
-	if (!SceneComponent)																								/*Проверка на наличие компонента*/
-	{
-		UE_LOG(LogTemp, Error, TEXT("Failed to create SceneComponent!"));
-		return;
-	}
 	RootComponent = SceneComponent;
 
 	SkeletalMeshWeapon = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Skeletal Mesh"));
@@ -50,30 +45,17 @@ void AWeaponDefault::Tick(float DeltaTime)
 void AWeaponDefault::FireTick(float DeltaTime)
 {
 	
-	if (GetWeaponRound() > 0)
+	if (WeaponFiring && GetWeaponRound() > 0 && !WeaponReloading)
 	{
-		if (WeaponFiring)
+		if (FireTimer < 0.0f)
 		{
-			if (FireTimer <= 0.0f)
-			{
-				if (!WeaponReloading)
-				{
-					Fire();
-				}
-			}
-			else
-			{
-				FireTimer -= DeltaTime;
-			}
+			Fire();
 		}
 		else
 		{
-			if (!WeaponReloading)
-			{
-				InitReload();
-			}
-
+			FireTimer -= DeltaTime;
 		}
+		
 	}
 }
 
@@ -146,6 +128,10 @@ void AWeaponDefault::SetWeaponStateFire(bool bIsFire)
 	if (CheckWeaponCanFire())
 	{
 		WeaponFiring = bIsFire;
+		if (bIsFire)
+		{
+			FireTimer = 0.0f;
+		}
 	}
 	else
 	{

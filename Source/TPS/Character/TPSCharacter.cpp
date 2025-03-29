@@ -310,6 +310,7 @@ void ATPSCharacter::InitWeapon(FName IdWeaponName)
 				CurrentWeapon = MyWeapon;
 
 				MyWeapon->WeaponSetting = MyWeaponInfo;
+			//	MyWeapon->WeaponReloading = false;
 				MyWeapon->WeaponInfo.Round = MyWeaponInfo.MaxRound;
 				//Remove !! Debug
 				MyWeapon->ReloadTime = MyWeaponInfo.ReloadTime;
@@ -328,9 +329,12 @@ void ATPSCharacter::InitWeapon(FName IdWeaponName)
 
 void ATPSCharacter::TryReloadWeapon()
 {
-		if (CurrentWeapon && CurrentWeapon->GetWeaponRound() <= CurrentWeapon->WeaponSetting.MaxRound)    // ”прощенный выриант проверок.
+		if (CurrentWeapon)    // ”прощенный выриант проверок.
 		{
-			CurrentWeapon->InitReload();
+			if (CurrentWeapon->GetWeaponRound() <= CurrentWeapon->WeaponSetting.MaxRound)
+			{
+				CurrentWeapon->InitReload();
+			}
 		}
 	
 }
