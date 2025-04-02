@@ -197,6 +197,7 @@ void ATPSCharacter::AttackCharEvent(bool bIsFiring)
 	MyWeapon = GetCurrentWeapon();
 	if (MyWeapon)
 	{
+	
 		//ToDo Check melee or range
 		MyWeapon->SetWeaponStateFire(bIsFiring);
 	}
@@ -316,6 +317,9 @@ void ATPSCharacter::InitWeapon(FName IdWeaponName)
 				MyWeapon->ReloadTime = MyWeaponInfo.ReloadTime;
 				MyWeapon->UpdateStateWeapon(MovementState);
 
+				// Логирование для отладки
+				UE_LOG(LogTemp, Warning, TEXT("Weapon AnimCharReload: %s"), *GetNameSafe(MyWeaponInfo.AnimCharReload));
+
 				MyWeapon->OnWeaponReloadStart.AddDynamic(this, &ATPSCharacter::WeaponReloadStart);
 				MyWeapon->OnWeaponReloadEnd.AddDynamic(this, &ATPSCharacter::WeaponReloadEnd);
 			}
@@ -346,6 +350,7 @@ void ATPSCharacter::WeaponReloadStart(UAnimMontage* Anim)
 
 void ATPSCharacter::WeaponReloadEnd()
 {
+	UE_LOG(LogTemp, Warning, TEXT("WeaponReloadEnd called!"));
 	WeaponReloadEnd_BP();
 }
 

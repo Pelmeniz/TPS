@@ -132,9 +132,9 @@ public:
 	void WeaponReloadStart(UAnimMontage* Anim);
 	UFUNCTION()
 	void WeaponReloadEnd();
-	UFUNCTION(BlueprintNativeEvent)
+	UFUNCTION(BlueprintNativeEvent, Category = "Weapon")
 	void WeaponReloadStart_BP(UAnimMontage* Anim);
-	UFUNCTION(BlueprintNativeEvent)
+	UFUNCTION(BlueprintNativeEvent, Category = "Weapon")
 	void WeaponReloadEnd_BP();
 
 	UFUNCTION(BlueprintCallable)
