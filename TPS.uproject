@@ -15,6 +15,10 @@
 	],
 	"Plugins": [
 		{
+			"Name": "XRBase",
+			"Enabled": true
+		},
+		{
 			"Name": "ModelingToolsEditorMode",
 			"Enabled": true
 		},

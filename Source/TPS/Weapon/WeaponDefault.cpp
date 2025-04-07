@@ -24,6 +24,11 @@ AWeaponDefault::AWeaponDefault()
 
 	ShootLocation = CreateDefaultSubobject<UArrowComponent>(TEXT("ShootLocation"));
 	ShootLocation->SetupAttachment(RootComponent);
+
+	//Параметры магазина
+	MagazineSocketName = "Magazine_Socket";
+	EjectImpulseStrength = 300.f;
+	CurrentMagazine = nullptr;
 }
 
 //Called when the game starts or when spawned
@@ -121,6 +126,63 @@ void AWeaponDefault::WeaponInit()
 		StaticMeshWeapon->DestroyComponent();
 	}
 	UpdateStateWeapon(EMovementState::Run_State);
+}
+
+void AWeaponDefault::EjectMagazine()
+{
+	if (!SkeletalMeshWeapon || MagazineSocketName.IsNone())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("AWeaponDefault::EjectMagazine - No SkeletalMesh or SocketName!"));
+		return;
+	}
+
+	// Ищем все прикрепленные акторы
+	TArray<AActor*> AttachedActors;
+	SkeletalMeshWeapon->GetOwner()->GetAttachedActors(AttachedActors);
+
+	// Ищем магазин в указанном сокете
+	AActor* MagazineToEject = nullptr;
+	for (AActor* Actor : AttachedActors)
+	{
+		if (Actor && Actor->GetAttachParentSocketName() == MagazineSocketName)
+		{
+			MagazineToEject = Actor;
+			break;
+		}
+	}
+
+	if (!MagazineToEject)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("AWeaponDefault::EjectMagazine - No magazine found in socket %s!"), *MagazineSocketName.ToString());
+		return;
+	}
+
+	// Отсоединяем магазин
+	MagazineToEject->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+
+	// Включаем физику
+	if (UStaticMeshComponent* MagazineMesh = MagazineToEject->FindComponentByClass<UStaticMeshComponent>())
+	{
+		MagazineMesh->SetSimulatePhysics(true);
+		MagazineMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+
+		// Добавляем импульс
+		const FVector EjectDirection = SkeletalMeshWeapon->GetRightVector(); // Или GetForwardVector(), в зависимости от ориентации
+		MagazineMesh->AddImpulse(EjectDirection * EjectImpulseStrength, NAME_None, true);
+
+		// Добавляем случайное вращение
+		const FRotator RandomRotation = FRotator(
+			FMath::RandRange(-30.f, 30.f),
+			FMath::RandRange(-50.f, 50.f),
+			FMath::RandRange(-20.f, 20.f)
+		);
+		MagazineMesh->AddAngularImpulseInDegrees(RandomRotation.Euler() * 5.f, NAME_None, true);
+	}
+
+	// Устанавливаем таймер на удаление
+	MagazineToEject->SetLifeSpan(5.0f); // Удалить через 5 секунд
+
+	CurrentMagazine = nullptr;
 }
 
 void AWeaponDefault::SetWeaponStateFire(bool bIsFire)
@@ -332,6 +394,8 @@ void AWeaponDefault::InitReload()
 
 	ReloadTimer = WeaponSetting.ReloadTime;
 
+	EjectMagazine();
+
 	//ToDo Anim reload
 	if (WeaponSetting.AnimCharReload)
 	{
@@ -347,6 +411,29 @@ void AWeaponDefault::FinishReload()
 {
 	WeaponReloading = false;
 	WeaponInfo.Round = WeaponSetting.MaxRound;
+	SpawnNewMagazine();
 
 	OnWeaponReloadEnd.Broadcast();
+}
+
+void AWeaponDefault::SpawnNewMagazine()
+{
+	if (!MagazineClass || !SkeletalMeshWeapon) return;
+
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+	CurrentMagazine = GetWorld()->SpawnActor<AActor>(
+		MagazineClass,
+		SkeletalMeshWeapon->GetSocketTransform(MagazineSocketName)
+	);
+
+	if (CurrentMagazine)
+	{
+		CurrentMagazine->AttachToComponent(
+			SkeletalMeshWeapon,
+			FAttachmentTransformRules::SnapToTargetNotIncludingScale,
+			MagazineSocketName
+		);
+	}
 }

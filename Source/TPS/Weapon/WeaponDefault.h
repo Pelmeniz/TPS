@@ -56,6 +56,30 @@ public:
 	bool WeaponFiring = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ReloadLogic")
 	bool WeaponReloading = false;
+	// Выбрасывает текущий магазин
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	void EjectMagazine();
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	void SpawnNewMagazine();
+protected:
+	// Меш магазина (если спавнится динамически)
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
+	TSubclassOf<AActor> MagazineClass;
+
+	// Смещение при спавне нового магазина (если нужно)
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
+	FTransform MagazineAttachTransform;
+	// Сокет, из которого вылетает магазин
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
+	FName MagazineSocketName = "Magazine_Socket";
+	// Сила выброса магазина
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
+	float EjectImpulseStrength = 300.0f;
+	// Текущий магазин
+	UPROPERTY(Transient)
+	AActor* CurrentMagazine;
+
+public:
 
 	UFUNCTION(BlueprintCallable)
 	void SetWeaponStateFire(bool bIsFire);
