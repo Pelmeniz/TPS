@@ -167,7 +167,8 @@ void AWeaponDefault::EjectMagazine()
 		MagazineMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 
 		// Добавляем импульс
-		const FVector EjectDirection = SkeletalMeshWeapon->GetRightVector(); // Или GetForwardVector(), в зависимости от ориентации
+		//const FVector EjectDirection = SkeletalMeshWeapon->GetRightVector(); // Или GetForwardVector(), в зависимости от ориентации
+		const FVector EjectDirection = SkeletalMeshWeapon->GetForwardVector();
 		MagazineMesh->AddImpulse(EjectDirection * EjectImpulseStrength, NAME_None, true);
 
 		// Добавляем случайное вращение
@@ -183,6 +184,53 @@ void AWeaponDefault::EjectMagazine()
 	MagazineToEject->SetLifeSpan(5.0f); // Удалить через 5 секунд
 
 	CurrentMagazine = nullptr;
+}
+
+void AWeaponDefault::EjectShell()
+{
+	if (!SkeletalMeshWeapon || ShellEjectSocketName.IsNone() || !ShellClass)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Cannot eject shell - missing components"));
+		return;
+	}
+
+	// Спавним гильзу
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+	const FTransform SocketTransform = SkeletalMeshWeapon->GetSocketTransform(ShellEjectSocketName);
+	AActor* SpawnedShell = GetWorld()->SpawnActor<AActor>(ShellClass, SocketTransform, SpawnParams);
+
+	if (!SpawnedShell)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Failed to spawn shell"));
+		return;
+	}
+
+	// Настраиваем физику
+	if (UStaticMeshComponent* ShellMesh = SpawnedShell->FindComponentByClass<UStaticMeshComponent>())
+	{
+		ShellMesh->SetSimulatePhysics(true);
+		ShellMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+
+		// Направление выброса (вперед + немного вправо и вверх)
+		FVector EjectDirection = SkeletalMeshWeapon->GetRightVector()
+			+ FVector::UpVector * 0.3f
+			+ SkeletalMeshWeapon->GetForwardVector() * 0.2f;
+		EjectDirection.Normalize();
+
+		ShellMesh->AddImpulse(EjectDirection * ShellEjectImpulse, NAME_None, true);
+
+		// Добавляем случайное вращение
+		FRotator RandomRotation(
+			FMath::RandRange(-30.f, 30.f),
+			FMath::RandRange(-90.f, 90.f),
+			FMath::RandRange(-20.f, 20.f)
+		);
+		ShellMesh->AddAngularImpulseInDegrees(RandomRotation.Euler() * 2.f, NAME_None, true);
+	}
+
+	SpawnedShell->SetLifeSpan(ShellLifeSpan);
 }
 
 void AWeaponDefault::SetWeaponStateFire(bool bIsFire)
@@ -221,9 +269,11 @@ void AWeaponDefault::Fire()
 	FireTimer = WeaponSetting.RateOfFire;
 	WeaponInfo.Round = WeaponInfo.Round - 1;
 	ChangeDispersionByShot();
+	EjectShell();
 
 	UGameplayStatics::SpawnSoundAtLocation(GetWorld(), WeaponSetting.SoundFireWeapon, ShootLocation->GetComponentLocation());
 	UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), WeaponSetting.EffectFireWeapon, ShootLocation->GetComponentTransform());
+	UGameplayStatics::SpawnSoundAtLocation(GetWorld(), WeaponSetting.SoundFireWeapon, ShootLocation->GetComponentLocation());
 
 	int8 NumberProjectile = GetNumberProjectileByShot();
 

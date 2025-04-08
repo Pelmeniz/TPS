@@ -79,6 +79,21 @@ protected:
 	UPROPERTY(Transient)
 	AActor* CurrentMagazine;
 
+	UFUNCTION(BlueprintCallable, Category = "Weapon")
+	void EjectShell();
+
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Shells")
+	FName ShellEjectSocketName = "Shell_Eject";
+
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Shells")
+	TSubclassOf<AActor> ShellClass;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Shells")
+	float ShellEjectImpulse = 250.0f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon|Shells")
+	float ShellLifeSpan = 5.0f;
+
 public:
 
 	UFUNCTION(BlueprintCallable)
