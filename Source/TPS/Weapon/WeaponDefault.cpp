@@ -36,6 +36,7 @@ void AWeaponDefault::BeginPlay()
 {
 	Super::BeginPlay();
 	WeaponInit();
+	SpawnNewMagazine();
 }
 
 //Called every frame
@@ -75,6 +76,7 @@ void AWeaponDefault::ReloadTick(float DeltaTime)
 		else
 		{
 			ReloadTimer -= DeltaTime;
+			ReloadProgress = 1.0f - (ReloadTimer / WeaponSetting.ReloadTime);
 		}
 	}
 }
@@ -168,15 +170,17 @@ void AWeaponDefault::EjectMagazine()
 
 		// Добавляем импульс
 		//const FVector EjectDirection = SkeletalMeshWeapon->GetRightVector(); // Или GetForwardVector(), в зависимости от ориентации
-		const FVector EjectDirection = SkeletalMeshWeapon->GetForwardVector();
+		FVector EjectDirection = -GetActorUpVector();
 		MagazineMesh->AddImpulse(EjectDirection * EjectImpulseStrength, NAME_None, true);
 
 		// Добавляем случайное вращение
 		const FRotator RandomRotation = FRotator(
 			FMath::RandRange(-30.f, 30.f),
 			FMath::RandRange(-50.f, 50.f),
-			FMath::RandRange(-20.f, 20.f)
+			0.0f
 		);
+		EjectDirection.Normalize();
+
 		MagazineMesh->AddAngularImpulseInDegrees(RandomRotation.Euler() * 5.f, NAME_None, true);
 	}
 
@@ -442,6 +446,8 @@ void AWeaponDefault::InitReload()
 {
 	WeaponReloading = true;
 
+	bIsReloadUIVisible = true;     // Показываем UI
+
 	ReloadTimer = WeaponSetting.ReloadTime;
 
 	EjectMagazine();
@@ -460,6 +466,7 @@ void AWeaponDefault::InitReload()
 void AWeaponDefault::FinishReload()
 {
 	WeaponReloading = false;
+	bIsReloadUIVisible = false;
 	WeaponInfo.Round = WeaponSetting.MaxRound;
 	SpawnNewMagazine();
 

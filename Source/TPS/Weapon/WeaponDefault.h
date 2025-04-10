@@ -8,7 +8,7 @@
 #include "Weapon/Projectile/ProjectileDefault.h"
 #include "WeaponDefault.generated.h"
 
-//DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnWeaponFireStart);//ToDo Delegate on event weapon fire - Anim char, state char...
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnWeaponFireStart);//ToDo Delegate on event weapon fire - Anim char, state char...
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeaponReloadStart, UAnimMontage*, Anim);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnWeaponReloadEnd);
 
@@ -74,7 +74,7 @@ protected:
 	FName MagazineSocketName = "Magazine_Socket";
 	// Сила выброса магазина
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
-	float EjectImpulseStrength = 300.0f;
+	float EjectImpulseStrength = 10.0f;
 	// Текущий магазин
 	UPROPERTY(Transient)
 	AActor* CurrentMagazine;
@@ -120,6 +120,12 @@ public:
 	float ReloadTimer = 0.0f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ReloadLogic Debug") //Remove !! Debug
 	float ReloadTime = 0.0f;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Weapon|UI")
+	bool bIsReloadUIVisible = false;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Weapon|UI")
+	float ReloadProgress = 0.0f;
 
 	//flags
 	bool BlockFire = false;
