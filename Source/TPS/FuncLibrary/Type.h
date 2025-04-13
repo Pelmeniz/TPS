@@ -69,6 +69,21 @@ struct FProjectileInfo
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ProjecctileSetting")
 	float ExploseMaxDamage = 40.0f;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grenade")
+	float ExploseInnerRadius = 500.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grenade")
+	float ExploseOuterRadius = 1000.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grenade")
+	float ExploseDamageFalloff = 2.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Debug")
+	UParticleSystem* DebugFX = nullptr; // Ёффект дл€ отладки
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Debug")
+	bool Debug = false; // ƒобавьте эту строку
+
 	//Timer add
 
 };
@@ -180,4 +195,14 @@ UCLASS()
 class TPS_API UType : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
+};
+
+USTRUCT(BlueprintType)
+struct FProjectileSetting
+{
+	GENERATED_BODY()
+
+	// ... другие параметры ...
+
+	
 };

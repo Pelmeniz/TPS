@@ -30,6 +30,8 @@ public:
 	class USkeletalMeshComponent* SkeletalMeshWeapon = nullptr;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"), Category = Components)
 	class UStaticMeshComponent* StaticMeshWeapon = nullptr;
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
+	TSubclassOf<class AProjectileDefault> ProjectileClass;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"), Category = Components)
 	class UArrowComponent* ShootLocation = nullptr;
 

@@ -2,6 +2,7 @@
 #include "DrawDebugHelpers.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/GameplayStatics.h"
+#include "Weapon/Projectile/ProjectileDefault_Grenade.h"
 
 //Sets default values
 AWeaponDefault::AWeaponDefault()
@@ -281,7 +282,7 @@ void AWeaponDefault::Fire()
 
 	int8 NumberProjectile = GetNumberProjectileByShot();
 
-	if (ShootLocation)
+	if (!ShootLocation || !ProjectileClass || !ShootLocation)
 	{
 		FVector SpawnLocation = ShootLocation->GetComponentLocation();
 		FRotator SpawnRotation = ShootLocation->GetComponentRotation();
@@ -308,12 +309,32 @@ void AWeaponDefault::Fire()
 				SpawnParams.Owner = GetOwner();
 				SpawnParams.Instigator = GetInstigator();
 
-				AProjectileDefault* MyProjectile = Cast<AProjectileDefault>(GetWorld()->SpawnActor(ProjectileInfo.Projectile, &SpawnLocation, &SpawnRotation, SpawnParams));
-				if (MyProjectile)
+				if (AProjectileDefault* MyProjectile = Cast<AProjectileDefault>(GetWorld()->SpawnActor(ProjectileInfo.Projectile, &SpawnLocation, &SpawnRotation, SpawnParams)))
 				{
-					//ToDo Init Projectile settings by id in table row(or keep in weapon table)
-					MyProjectile->InitProjectile(WeaponSetting.ProjectileSetting);
+					if (MyProjectile)
+					{
+						//ToDo Init Projectile settings by id in table row(or keep in weapon table)
+						MyProjectile->InitProjectile(WeaponSetting.ProjectileSetting);
+					}
 				}
+				else if (AProjectileDefault_Grenade* Grenade = GetWorld()->SpawnActor<AProjectileDefault_Grenade>(
+					ProjectileClass, SpawnLocation, SpawnRotation, SpawnParams))
+				{
+					// ѕринудительна€ инициализаци€ скорости
+					if (Grenade->GetProjectileMovement())
+					{
+						FVector LaunchDir = SpawnRotation.Vector();
+						Grenade->GetProjectileMovement()->Velocity = LaunchDir * Grenade->GetProjectileMovement()->InitialSpeed;
+					}
+
+					UE_LOG(LogTemp, Log, TEXT("Grenade spawned! Velocity: %s"),
+						*Grenade->GetProjectileMovement()->Velocity.ToString());
+				}
+				else
+				{
+					UE_LOG(LogTemp, Error, TEXT("Failed to spawn grenade!"));
+				}
+			
 			}
 			else
 			{

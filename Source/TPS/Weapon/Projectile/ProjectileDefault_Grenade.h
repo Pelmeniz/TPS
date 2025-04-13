@@ -19,7 +19,21 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+	UPROPERTY(BlueprintReadOnly, Category = "Grenade")
+	bool bExplosed = false;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	class UProjectileMovementComponent* GrenadeMovement;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+	class UProjectileMovementComponent* ProjectileMovement;
+
+
 public:
+
+	AProjectileDefault_Grenade();
+
+	UFUNCTION(BlueprintCallable, Category = "Projectile")
+	class UProjectileMovementComponent* GetProjectileMovement() const;
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
