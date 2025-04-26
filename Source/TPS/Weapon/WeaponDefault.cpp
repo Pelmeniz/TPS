@@ -282,7 +282,8 @@ void AWeaponDefault::Fire()
 
 	int8 NumberProjectile = GetNumberProjectileByShot();
 
-	if (!ShootLocation || !ProjectileClass || !ShootLocation)
+	//if (!ShootLocation || !ProjectileClass || !ShootLocation)
+	if (ShootLocation && ProjectileClass)
 	{
 		FVector SpawnLocation = ShootLocation->GetComponentLocation();
 		FRotator SpawnRotation = ShootLocation->GetComponentRotation();
