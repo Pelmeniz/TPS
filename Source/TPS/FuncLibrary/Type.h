@@ -16,6 +16,16 @@ enum class EMovementState : uint8
 	SprintRun_State UMETA(DisplayName = "Run State"),
 };
 
+UENUM(BlueprintType)
+enum class EWeaponType : uint8
+{
+	RifleType UMETA(DisplayName = "Rifle"),
+	ShotGunType UMETA(DisplayName = "ShotGun"),
+	SniperRifle UMETA(DisplayName = "SniperRifle"),
+	GrenadeLauncher UMETA(DisplayName = "GrenadeLauncher"),
+	RocketLauncher UMETA(DisplayName = "RocketLauncher"),
+};
+
 USTRUCT(BlueprintType)
 struct FCharacterSpeed
 {
@@ -40,6 +50,14 @@ struct FProjectileInfo
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ProjecctileSetting")
 	TSubclassOf<class AProjectileDefault> Projectile = nullptr;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ProjectileSetting")
+	UStaticMesh* ProjectileStaticMesh = nullptr;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ProjectileSetting")
+	FTransform ProjectileStaticMeshOffset = FTransform();
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ProjectileSetting")
+	UParticleSystem* ProjectileTrailFx = nullptr;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ProjectileSetting")
+	FTransform ProjectileTrailFxOffset = FTransform();
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ProjecctileSetting")
 	float ProjectileDamage = 20.0f;
 
@@ -49,41 +67,29 @@ struct FProjectileInfo
 	float ProjectileInitSpeed = 2000.0f;
 
 	//material to decal on hit
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ProjecctileSetting")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "FX")
 	TMap<TEnumAsByte<EPhysicalSurface>, UMaterialInterface*> HitDecals;
 
 	// Sound when hit
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ProjecctileSetting")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "FX")
 	USoundBase* HitSound = nullptr;
 
 	//fx when hit check by surface
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ProjecctileSetting")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "FX")
 	TMap<TEnumAsByte<EPhysicalSurface>, UParticleSystem*> HitFXs;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ProjecctileSetting")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Explode")
 	UParticleSystem* ExploseFX = nullptr;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ProjecctileSetting")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Explode")
 	USoundBase* ExploseSound = nullptr;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ProjecctileSetting")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Explode")
 	float ProjectileMaxRadiusDamage = 200.0f;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ProjecctileSetting")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Explode")
+	float ProjectileMinRadiusDamage = 200.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Explode")
 	float ExploseMaxDamage = 40.0f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grenade")
-	float ExploseInnerRadius = 500.f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grenade")
-	float ExploseOuterRadius = 1000.f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grenade")
-	float ExploseDamageFalloff = 2.f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Debug")
-	UParticleSystem* DebugFX = nullptr; // Ёффект дл€ отладки
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Debug")
-	bool Debug = false; // ƒобавьте эту строку
-
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Explode")
+	float ExplodeFalloffCoef = 1.0f;
 	//Timer add
 
 };
@@ -131,6 +137,53 @@ struct FWeaponDispersion
 };
 
 USTRUCT(BlueprintType)
+struct FAnimationWeaponInfo
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Anim Char")
+	UAnimMontage* AnimCharFire = nullptr;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Anim Char")
+	UAnimMontage* AnimCharFireAim = nullptr;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Anim Char")
+	UAnimMontage* AnimCharReload = nullptr;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Anim Char")
+	UAnimMontage* AnimCharReloadAim = nullptr;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Anim Weapon")
+	UAnimMontage* AnimWeaponReload = nullptr;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Anim Weapon")
+	UAnimMontage* AnimWeaponReloadAim = nullptr;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Anim Weapon")
+	UAnimMontage* AnimWeaponFire = nullptr;
+
+};
+
+USTRUCT(BlueprintType)
+struct FDropMeshInfo
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DropMesh")
+	UStaticMesh* DropMesh = nullptr;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DropMesh")
+	float DropMeshTime = -1.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DropMesh")
+	float DropMeshLifeTime = 5.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DropMesh")
+	FTransform DropMeshOffset = FTransform();
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DropMesh")
+	FVector DropMeshImpulseDir = FVector(0.0f);
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DropMesh")
+	float PowerImpulse = 0.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DropMesh")
+	float ImpulseRandomDispersion = 0.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DropMesh")
+	float CustomMass = 0.0f;
+
+};
+
+USTRUCT(BlueprintType)
 struct FWeaponInfo : public FTableRowBase
 {
 	GENERATED_BODY()
@@ -162,27 +215,32 @@ struct FWeaponInfo : public FTableRowBase
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Projectile")
 	FProjectileInfo ProjectileSetting;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Trace")
-	float WeaponDamage = 20.0f;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Trace")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Trace ")
 	float DistanceTrace = 2000.0f;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HitEffect")
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "HitEffect ")
 	UDecalComponent* DecalOnHit = nullptr;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Anim")
-	UAnimMontage* AnimCharFire = nullptr;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Anim")
-	UAnimMontage* AnimCharReload = nullptr;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Anim ")
+	FAnimationWeaponInfo AnimWeaponInfo;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mesh ")
+	FDropMeshInfo ClipDropMesh;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mesh ")
+	FDropMeshInfo ShellBullets;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mesh")
-	UStaticMesh* MagazinDrop = nullptr;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mesh")
-	UStaticMesh* ShellBullets = nullptr;
+	//inv
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Inventory ")
+	float SwitchTimeToWeapon = 1.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Inventory ")
+	UTexture2D* WeaponIcon = nullptr;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Inventory ")
+	EWeaponType WeaponType = EWeaponType::RifleType;
 };
 
 USTRUCT(BlueprintType)
-struct FAddicionalWeaponInfo
+struct FAdditionalWeaponInfo
 {
 	GENERATED_BODY()
 
@@ -191,18 +249,51 @@ struct FAddicionalWeaponInfo
 
 };
 
+USTRUCT(BlueprintType)
+struct FWeaponSlot
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WeaponSlot")
+	FName NameItem;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WeaponSlot")
+	FAdditionalWeaponInfo AdditionalInfo;
+
+};
+
+USTRUCT(BlueprintType)
+struct FAmmoSlot
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AmmoSlot")
+	EWeaponType WeaponType = EWeaponType::RifleType;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AmmoSlot")
+	int32 Cout = 100;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AmmoSlot")
+	int32 MaxCout = 100;
+
+};
+
+USTRUCT(BlueprintType)
+struct FDropItem : public FTableRowBase
+{
+	GENERATED_BODY()
+
+	///Index Slot by Index Array
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DropWeapon")
+	UStaticMesh* WeaponStaticMesh = nullptr;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DropWeapon")
+	USkeletalMesh* WeaponSkeletMesh = nullptr;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "DropWeapon")
+	FWeaponSlot WeaponInfo;
+
+};
+
 UCLASS()
 class TPS_API UType : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
-};
-
-USTRUCT(BlueprintType)
-struct FProjectileSetting
-{
-	GENERATED_BODY()
-
-	// ... другие параметры ...
-
-	
 };

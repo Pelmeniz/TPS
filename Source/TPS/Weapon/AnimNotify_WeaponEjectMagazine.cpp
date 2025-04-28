@@ -10,7 +10,7 @@ void UAnimNotify_WeaponEjectMagazine::Notify(USkeletalMeshComponent* MeshComp, U
     {
         if (AWeaponDefault* Weapon = Cast<AWeaponDefault>(Owner))
         {
-            Weapon->EjectMagazine();
+           // Weapon->EjectMagazine();
         }
     }
 }

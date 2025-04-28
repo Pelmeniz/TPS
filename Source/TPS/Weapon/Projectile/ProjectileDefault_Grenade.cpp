@@ -60,7 +60,7 @@ void AProjectileDefault_Grenade::TimerExplose(float DeltaTime)
             {
                 UGameplayStatics::SpawnEmitterAtLocation(
                     GetWorld(),
-                    ProjectileSetting.DebugFX, // Добавьте этот эффект в настройки
+                  ProjectileSetting.ProjectileTrailFx, // Добавьте этот эффект в настройки
                     GetActorLocation(),
                     FRotator::ZeroRotator,
                     true
@@ -155,9 +155,9 @@ void AProjectileDefault_Grenade::Explose()
         ProjectileSetting.ExploseMaxDamage,
         ProjectileSetting.ExploseMaxDamage * 0.2f,
         GetActorLocation(),
-        ProjectileSetting.ExploseInnerRadius,
-        ProjectileSetting.ExploseOuterRadius,
-        ProjectileSetting.ExploseDamageFalloff,
+        ProjectileSetting.ProjectileMaxRadiusDamage,
+        ProjectileSetting.ProjectileMinRadiusDamage,
+        ProjectileSetting.ExplodeFalloffCoef,
         nullptr,
         IgnoredActors,
         this,
@@ -167,13 +167,13 @@ void AProjectileDefault_Grenade::Explose()
 
     // Отладочная визуализация
 #if ENABLE_DRAW_DEBUG
-    if (ProjectileSetting.Debug)
+    if (ProjectileSetting.Projectile)
     {
         DrawDebugSphere(GetWorld(), GetActorLocation(),
-            ProjectileSetting.ExploseInnerRadius, 12,
+            ProjectileSetting.ProjectileMaxRadiusDamage, 12,
             FColor::Red, false, 2.0f);
         DrawDebugSphere(GetWorld(), GetActorLocation(),
-            ProjectileSetting.ExploseOuterRadius, 12,
+            ProjectileSetting.ProjectileMinRadiusDamage, 12,
             FColor::Orange, false, 2.0f);
     }
 #endif

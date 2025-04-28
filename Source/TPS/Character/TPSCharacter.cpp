@@ -10,8 +10,9 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "HeadMountedDisplayTypes.h"
 #include "Materials/Material.h"
-#include "Kismet\GameplayStatics.h"
-#include "Kismet\KismetMathLibrary.h"
+#include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetMathLibrary.h"
+#include "Character/TPSInventoryComponent.h"
 #include "TPS/Game/TPSGameInstance.h"
 #include "Engine/World.h"
 
@@ -49,6 +50,14 @@ ATPSCharacter::ATPSCharacter()
 	TopDownCameraComponent->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	TopDownCameraComponent->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
 
+	
+	InventoryComponent = CreateDefaultSubobject<UTPSInventoryComponent>(TEXT("InventoryComponent"));
+	
+		if (InventoryComponent)
+		{
+			InventoryComponent->OnSwitchWeapon.AddDynamic(this, &ATPSCharacter::InitWeapon);
+		}
+
 	// Activate ticking in order to update the cursor every frame.
 	PrimaryActorTick.bCanEverTick = true;
 	PrimaryActorTick.bStartWithTickEnabled = true;
@@ -82,8 +91,6 @@ void ATPSCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	InitWeapon(InitWeaponName);
-
 	if (CursorMaterial)
 	{
 		CurrentCursor = UGameplayStatics::SpawnDecalAtLocation(GetWorld(), CursorMaterial, CursorSize, FVector(0));
@@ -101,6 +108,9 @@ void ATPSCharacter::SetupPlayerInputComponent(UInputComponent* NewInputComponent
 	NewInputComponent->BindAction(TEXT("FireEvent"), EInputEvent::IE_Pressed, this, &ATPSCharacter::InputAttackPressed);
 	NewInputComponent->BindAction(TEXT("FireEvent"), EInputEvent::IE_Released, this, &ATPSCharacter::InputAttackReleased);
 	NewInputComponent->BindAction(TEXT("ReloadEvent"), EInputEvent::IE_Released, this, &ATPSCharacter::TryReloadWeapon);
+
+	NewInputComponent->BindAction(TEXT("SwitchNextWeapon"), EInputEvent::IE_Pressed, this, &ATPSCharacter::TrySwitchNextWeapon);
+	NewInputComponent->BindAction(TEXT("SwitchPreviosWeapon"), EInputEvent::IE_Pressed, this, &ATPSCharacter::TrySwitchPreviosWeapon);
 
 }
 
@@ -160,19 +170,19 @@ void ATPSCharacter::MovementTick(float DeltaTime)
 				{
 				case EMovementState::Aim_State:
 					Displacement = FVector(0.0f, 0.0f, 160.0f);
-					CurrentWeapon->ShouldReduseDespersion = true;
+					CurrentWeapon->ShouldReduceDispersion = true;
 					break;
 				case EMovementState::AimWalk_State:
 					Displacement = FVector(0.0f, 0.0f, 160.0f);
-					CurrentWeapon->ShouldReduseDespersion = true;
+					CurrentWeapon->ShouldReduceDispersion = true;
 					break;
 				case EMovementState::Walk_State:
 					Displacement = FVector(0.0f, 0.0f, 120.0f);
-					CurrentWeapon->ShouldReduseDespersion = false;
+					CurrentWeapon->ShouldReduceDispersion = false;
 					break;
 				case EMovementState::Run_State:
 					Displacement = FVector(0.0f, 0.0f, 120.0f);
-					CurrentWeapon->ShouldReduseDespersion = false;
+					CurrentWeapon->ShouldReduceDispersion = false;
 					break;
 				case EMovementState::SprintRun_State:
 					break;
@@ -287,43 +297,62 @@ AWeaponDefault* ATPSCharacter::GetCurrentWeapon()
 	return CurrentWeapon;
 }
 
-void ATPSCharacter::InitWeapon(FName IdWeaponName)
+void ATPSCharacter::InitWeapon(FName IdWeaponName, FAdditionalWeaponInfo WeaponAdditionalInfo, int32 NewCurrentIndexWeapon)
 {
+	if (CurrentWeapon)
+	{
+		CurrentWeapon->Destroy();
+		CurrentWeapon = nullptr;
+	}
+
 	UTPSGameInstance* MyGI = Cast<UTPSGameInstance>(GetGameInstance());
 	FWeaponInfo MyWeaponInfo;
 	if (MyGI)
 	{
-		if (MyGI->GetWeaponInfoByName(IdWeaponName, MyWeaponInfo))
-		{
-			FVector SpawnLocation = FVector(0);
-			FRotator SpawnRotation = FRotator(0);
-
-			FActorSpawnParameters SpawnParams;
-			SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-			SpawnParams.Owner = GetOwner();
-			SpawnParams.Instigator = GetInstigator();
-
-			AWeaponDefault* MyWeapon = Cast<AWeaponDefault>(GetWorld()->SpawnActor(MyWeaponInfo.WeaponClass, &SpawnLocation, &SpawnRotation, SpawnParams));
-			if (MyWeapon)
+		if(MyGI->GetWeaponInfoByName(IdWeaponName, MyWeaponInfo))
+			if (MyWeaponInfo.WeaponClass)
 			{
-				FAttachmentTransformRules Rule(EAttachmentRule::SnapToTarget, false);
-				MyWeapon->AttachToComponent(GetMesh(), Rule, FName("Weapon_R"));
-				CurrentWeapon = MyWeapon;
+				FVector SpawnLocation = FVector(0);
+				FRotator SpawnRotation = FRotator(0);
 
-				MyWeapon->WeaponSetting = MyWeaponInfo;
-			//	MyWeapon->WeaponReloading = false;
-				MyWeapon->WeaponInfo.Round = MyWeaponInfo.MaxRound;
-				//Remove !! Debug
-				MyWeapon->ReloadTime = MyWeaponInfo.ReloadTime;
-				MyWeapon->UpdateStateWeapon(MovementState);
+				FActorSpawnParameters SpawnParams;
+				SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+				SpawnParams.Owner = GetOwner();
+				SpawnParams.Instigator = GetInstigator();
 
-				// Логирование для отладки
-				UE_LOG(LogTemp, Warning, TEXT("Weapon AnimCharReload: %s"), *GetNameSafe(MyWeaponInfo.AnimCharReload));
+				AWeaponDefault* MyWeapon = Cast<AWeaponDefault>(GetWorld()->SpawnActor(MyWeaponInfo.WeaponClass, &SpawnLocation, &SpawnRotation, SpawnParams));
+				if (MyWeapon)
+				{
+					FAttachmentTransformRules Rule(EAttachmentRule::SnapToTarget, false);
+					MyWeapon->AttachToComponent(GetMesh(), Rule, FName("Weapon_R"));
+					CurrentWeapon = MyWeapon;
 
-				MyWeapon->OnWeaponReloadStart.AddDynamic(this, &ATPSCharacter::WeaponReloadStart);
-				MyWeapon->OnWeaponReloadEnd.AddDynamic(this, &ATPSCharacter::WeaponReloadEnd);
+					MyWeapon->WeaponSetting = MyWeaponInfo;
+					//MyWeapon->AdditionalWeaponInfo.Round = MyWeaponInfo.MaxRound;
+					//	MyWeapon->WeaponReloading = false;
+					//MyWeapon->WeaponInfo.Round = MyWeaponInfo.MaxRound;
+					//Remove !! Debug
+					MyWeapon->ReloadTime = MyWeaponInfo.ReloadTime;
+					MyWeapon->UpdateStateWeapon(MovementState);
+
+					MyWeapon->AdditionalWeaponInfo = WeaponAdditionalInfo;
+					CurrentIndexWeapon = NewCurrentIndexWeapon;//fix
+
+					//Not Forget remove delegate on change/drop weapon
+					MyWeapon->OnWeaponReloadStart.AddDynamic(this, &ATPSCharacter::WeaponReloadStart);
+					MyWeapon->OnWeaponReloadEnd.AddDynamic(this, &ATPSCharacter::WeaponReloadEnd);
+
+					MyWeapon->OnWeaponFireStart.AddDynamic(this, &ATPSCharacter::WeaponFireStart);
+
+					// after switch try reload weapon if needed
+					if (CurrentWeapon->GetWeaponRound() <= 0 && CurrentWeapon->CheckCanWeaponReload())
+						CurrentWeapon->InitReload();
+
+					if (InventoryComponent)
+						InventoryComponent->OnWeaponAmmoAviable.Broadcast(MyWeapon->WeaponSetting.WeaponType);
+				}
+
 			}
-		}
 	}
 	else
 	{
@@ -331,11 +360,16 @@ void ATPSCharacter::InitWeapon(FName IdWeaponName)
 	}
 }
 
+void ATPSCharacter::RemoveCurrentWeapon()
+{
+
+}
+
 void ATPSCharacter::TryReloadWeapon()
 {
-		if (CurrentWeapon)    // Упрощенный выриант проверок.
+		if (CurrentWeapon && !CurrentWeapon->WeaponReloading)    // Fix Reload
 		{
-			if (CurrentWeapon->GetWeaponRound() <= CurrentWeapon->WeaponSetting.MaxRound)
+			if (CurrentWeapon->GetWeaponRound() < CurrentWeapon->WeaponSetting.MaxRound && CurrentWeapon->CheckCanWeaponReload())
 			{
 				CurrentWeapon->InitReload();
 			}
@@ -348,10 +382,14 @@ void ATPSCharacter::WeaponReloadStart(UAnimMontage* Anim)
 	WeaponReloadStart_BP(Anim);
 }
 
-void ATPSCharacter::WeaponReloadEnd()
+void ATPSCharacter::WeaponReloadEnd(bool bIsSuccess, int32 AmmoTake)
 {
-	UE_LOG(LogTemp, Warning, TEXT("WeaponReloadEnd called!"));
-	WeaponReloadEnd_BP();
+	if (InventoryComponent && CurrentWeapon)
+	{
+		InventoryComponent->AmmoSlotChangeValue(CurrentWeapon->WeaponSetting.WeaponType, AmmoTake);
+		InventoryComponent->SetAdditionalInfoWeapon(CurrentIndexWeapon, CurrentWeapon->AdditionalWeaponInfo);
+	}
+	WeaponReloadEnd_BP(bIsSuccess);
 }
 
 void ATPSCharacter::WeaponReloadStart_BP_Implementation(UAnimMontage* Anim)
@@ -359,14 +397,77 @@ void ATPSCharacter::WeaponReloadStart_BP_Implementation(UAnimMontage* Anim)
 	//in BP
 }
 
-void ATPSCharacter::WeaponReloadEnd_BP_Implementation()
+void ATPSCharacter::WeaponReloadEnd_BP_Implementation(bool bIsSuccess)
 {
 	//in BP
+}
+
+void ATPSCharacter::WeaponFireStart(UAnimMontage* Anim)
+{
+	if (InventoryComponent && CurrentWeapon)
+		InventoryComponent->SetAdditionalInfoWeapon(CurrentIndexWeapon, CurrentWeapon->AdditionalWeaponInfo);
+	WeaponFireStart_BP(Anim);
+}
+
+void ATPSCharacter::WeaponFireStart_BP_Implementation(UAnimMontage* Anim)
+{
+	// in BP
 }
 
 UDecalComponent* ATPSCharacter::GetCursorToWorld()
 {
 	return CurrentCursor;
+}
+
+//ToDO in one func TrySwitchPreviosWeapon && TrySwicthNextWeapon
+//need Timer to Switch with Anim, this method stupid i must know switch success for second logic inventory
+//now we not have not success switch/ if 1 weapon switch to self
+
+void ATPSCharacter::TrySwitchNextWeapon()
+{
+	if (InventoryComponent->WeaponSlots.Num() > 1)
+	{
+		//We have more then one weapon go switch
+		int8 OldIndex = CurrentIndexWeapon;
+		FAdditionalWeaponInfo OldInfo;
+		if (CurrentWeapon)
+		{
+			OldInfo = CurrentWeapon->AdditionalWeaponInfo;
+			if (CurrentWeapon->WeaponReloading)
+				CurrentWeapon->CancelReload();
+		}
+
+		if (InventoryComponent)
+		{
+			if (InventoryComponent->SwitchWeaponToIndex(CurrentIndexWeapon + 1, OldIndex, OldInfo, true))
+			{
+			}
+		}
+	}
+}
+
+void ATPSCharacter::TrySwitchPreviosWeapon()
+{
+	if (InventoryComponent->WeaponSlots.Num() > 1)
+	{
+		//We have more then one weapon go switch
+		int8 OldIndex = CurrentIndexWeapon;
+		FAdditionalWeaponInfo OldInfo;
+		if (CurrentWeapon)
+		{
+			OldInfo = CurrentWeapon->AdditionalWeaponInfo;
+			if (CurrentWeapon->WeaponReloading)
+				CurrentWeapon->CancelReload();
+		}
+
+		if (InventoryComponent)
+		{
+			//InventoryComponent->SetAdditionalInfoWeapon(OldIndex, GetCurrentWeapon()->AdditionalWeaponInfo);
+			if (InventoryComponent->SwitchWeaponToIndex(CurrentIndexWeapon - 1, OldIndex, OldInfo, false))
+			{
+			}
+		}
+	}
 }
 
 bool ATPSCharacter::IsForwardMove()

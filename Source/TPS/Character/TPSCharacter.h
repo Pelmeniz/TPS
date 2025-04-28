@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "TPS\FuncLibrary\Type.h"
 #include "Weapon/Weapondefault.h"
+#include "Character/TPSInventoryComponent.h"
 //#include "Components/WidgetComponent.h"
 
 #include "TPSCharacter.generated.h"
@@ -27,7 +28,6 @@ protected:
 
 public:
 	ATPSCharacter();
-	//virtual ~ATPSCharacter() override;    // ¬иртуальный деструктор
 
 	// Called every frame.
 	virtual void Tick(float DeltaSeconds) override;
@@ -39,6 +39,9 @@ public:
 	/** Returns CameraBoom subobject **/
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 	//FORCEINLINE class UDecalComponent* GetCursorToWorld() { return CursorToWorld; }
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	class UTPSInventoryComponent* InventoryComponent;
 
 private:
 	/** Top down camera */
@@ -125,20 +128,27 @@ public:
 	UFUNCTION(BlueprintCallable)
 	AWeaponDefault* GetCurrentWeapon();
 	UFUNCTION(BlueprintCallable)
-	void InitWeapon(FName IdWeaponName);
+	void InitWeapon(FName IdWeaponName, FAdditionalWeaponInfo WeaponAdditionalInfo, int32 NewCurrentIndexWeapon);
+	UFUNCTION(BlueprintCallable)
+	void RemoveCurrentWeapon();
 	UFUNCTION(BlueprintCallable)
 	void TryReloadWeapon();
 	UFUNCTION()
 	void WeaponReloadStart(UAnimMontage* Anim);
 	UFUNCTION()
-	void WeaponReloadEnd();
-	UFUNCTION(BlueprintNativeEvent, Category = "Weapon")
+	void WeaponReloadEnd(bool bIsSuccess, int32 AmmoTake);
+	UFUNCTION(BlueprintNativeEvent)
 	void WeaponReloadStart_BP(UAnimMontage* Anim);
-	UFUNCTION(BlueprintNativeEvent, Category = "Weapon")
-	void WeaponReloadEnd_BP();
+	UFUNCTION(BlueprintNativeEvent)
+	void WeaponReloadEnd_BP(bool bIsSuccess);
 
 	UFUNCTION(BlueprintCallable)
 	UDecalComponent* GetCursorToWorld();
+
+	UFUNCTION()
+	void WeaponFireStart(UAnimMontage* Anim);
+	UFUNCTION(BlueprintNativeEvent)
+	void WeaponFireStart_BP(UAnimMontage* Anim);
 	
 	
 	// «ум колесика мыши. 
@@ -148,7 +158,13 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void InputMouseWheel(float Value);
 	
+	void TrySwitchNextWeapon();
+	void TrySwitchPreviosWeapon();
+
 	UFUNCTION(BlueprintCallable)
 	bool IsForwardMove();
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
+	int32 CurrentIndexWeapon = 0;
 };
 
