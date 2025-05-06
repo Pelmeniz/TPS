@@ -61,6 +61,7 @@ void AWeaponDefault::FireTick(float DeltaTime)
 		}
 		
 	}
+	
 }
 
 void AWeaponDefault::ReloadTick(float DeltaTime)
